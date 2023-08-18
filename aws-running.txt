@@ -3,3 +3,8 @@
 3. tmux attach -t thesis => now youare inside the virtual terminal
 4. conda activate ...
 5. run python
+
+Commands v terminalu:
+htop #na cpu / ram
+nvidia-smi #na gpu
+tmux #
