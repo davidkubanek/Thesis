@@ -125,7 +125,7 @@ def analyze_dataset(dataset, args):
     #     print(f'Number of data points with {i} positive targets: ', (np.array(positive) == i).sum(), f'({(np.array(positive) == i).sum()/len(positive)*100:.2f}%)')
 
 
-def data_explore(dataloader):
+def data_explore(dataloader, args):
     '''
     Explore the data
     '''

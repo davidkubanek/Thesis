@@ -67,7 +67,7 @@ args['lr'] = 0.01
 args['lr_decay_factor'] = 0.5
 
 # assay parameters
-args['assay_list'] = [str(assay_order[0])] #['2797']
+args['assay_list'] = [assay_groups['non_cell_based_high_hr'][0]] #['2797']
 args['num_assays'] = 1
 args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 print('Assays used:', args['assay_list'], 'Assay indeces:', args['assays_idx'])
@@ -80,7 +80,7 @@ data_splits = prepare_splits(data_list, args)
 '''
 Run experiments
 '''
-wandb.login()
+wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
 # Create a custom run name dynamically
