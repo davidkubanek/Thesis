@@ -1,6 +1,7 @@
 1. ssh to instance
 2. tmux new-session -s thesis => to create a new virtual terminal, so that you can run things in the command line without having the terminal opened / be connected to AWS
 3. tmux attach -t thesis => now youare inside the virtual terminal
+    detach by ctl+b + d
 4. conda activate ...
 5. run python
 
