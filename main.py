@@ -1,22 +1,23 @@
 # %%
-from train import *
-from load_data import *
-from support_funcs import *
-import importlib
-import train
-import load_data
-import support_funcs
 import torch
 import wandb
 
 # check if cuda is available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+import train
+import load_data
+import support_funcs
 
+import importlib
 # this method of import ensures that when support scripts are updated, the changes are imported in this script
 importlib.reload(support_funcs)
 importlib.reload(load_data)
 importlib.reload(train)
+
+from train import *
+from load_data import *
+from support_funcs import *
 
 # %%
 '''
@@ -24,11 +25,14 @@ Load data
 '''
 directory = 'data/'
 # directory = '/content/drive/MyDrive/Thesis/Data/'
+directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
+
 # Specify the path where you saved the dictionary
-load_path = directory + 'final/datalist_no_out.pkl'
+load_path = directory + 'final/datalist_small.pkl' #no_out.pkl'
 
-data_list, assay_groups, assay_order = load_data_list(load_path)
-
+print('\nLoading data...')
+data_list, assay_groups, assay_order = load_datalist(directory, load_path)
+print('SUCCESS: Data loaded.')
 
 # %%
 '''
@@ -63,9 +67,10 @@ args['lr'] = 0.01
 args['lr_decay_factor'] = 0.5
 
 # assay parameters
-args['assay_list'] = ['2797']
+args['assay_list'] = [str(assay_order[0])] #['2797']
 args['num_assays'] = 1
 args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
+print('Assays used:', args['assay_list'], 'Assay indeces:', args['assays_idx'])
 
 # create dataset splits (train, val, test) on device given args
 data_splits = prepare_splits(data_list, args)

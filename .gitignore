@@ -6,3 +6,4 @@ test.ipynb
 /wandb/
 
 data/
+__pycache__/

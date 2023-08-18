@@ -1,6 +1,5 @@
 
 
-from models import *
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -15,6 +14,7 @@ import models
 import importlib
 # this method of import ensures that when support scripts are updated, the changes are imported in this script
 importlib.reload(models)
+from models import *
 
 
 class TrainManager:
@@ -40,6 +40,7 @@ class TrainManager:
         total_params = sum(p.numel()
                            for p in self.model.parameters() if p.requires_grad)
         print(f'Total number of parameters: {total_params}')
+        print('Model:', args['model'], 'Assays:', args['assay_list'])
 
         self.dataloader = dataloader
 
@@ -96,9 +97,10 @@ class TrainManager:
                     out = self.model(data)
 
                 # data.y = data.y.unsqueeze(1)
-                # print('data.y:',data.y.shape)
+                #print('data.y:',data.y.shape)
+                #print('idx:', self.args['assays_idx'])
                 # Compute the loss. (sigmoid inherent in loss)
-                loss = self.criterion(out, data.y[:, args['assays_idx']])
+                loss = self.criterion(out, data.y[:, self.args['assays_idx']])
                 loss.backward()  # Derive gradients.
                 self.optimizer.step()  # Update parameters based on gradients.
                 cum_loss += loss.item()
@@ -175,13 +177,13 @@ class TrainManager:
                 # convert out to binary
                 pred = torch.round(torch.sigmoid(out))
                 preds.append(torch.round(torch.sigmoid(out)).tolist())
-                gts.append(data.y[:, args['assays_idx']].tolist())
+                gts.append(data.y[:, self.args['assays_idx']].tolist())
                 # print('pred:', pred)
                 # print('data.y:', data.y)
                 # print('data.y eval:',data.y.shape)
                 # data.y = data.y.unsqueeze(1)
                 # Check against ground-truth labels.
-                correct += int((pred == data.y[:, args['assays_idx']]).sum())
+                correct += int((pred == data.y[:, self.args['assays_idx']]).sum())
 
         preds = [b[i] for b in preds for i in range(len(b))]
         gts = [b[i] for b in gts for i in range(len(b))]
