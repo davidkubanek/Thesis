@@ -33,7 +33,7 @@ def cross_val(data_splits, args):
 
         # train model
         exp = TrainManager(dataloader, args)
-        exp.train(epochs=20, log=True, wb_log=False, early_stop=False)
+        exp.train(epochs=args['num_epochs'], log=True, wb_log=False, early_stop=False)
 
         # save metrics for fold
         CV_results['loss'].append(exp.eval_metrics['loss'][-1])
@@ -51,5 +51,8 @@ def cross_val(data_splits, args):
 
         if exp.eval_metrics['auc_test'][-1] > args['best_auc']:
             args['best_auc'] = exp.eval_metrics['auc_test'][-1]
+        
+        del data_splits['train']
+        del data_splits['val']
         
     return CV_results

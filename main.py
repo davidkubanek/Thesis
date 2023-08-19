@@ -1,6 +1,7 @@
 # %%
 import torch
 import wandb
+import pickle
 
 # check if cuda is available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -29,7 +30,7 @@ Load data
 '''
 directory = 'data/'
 # directory = '/content/drive/MyDrive/Thesis/Data/'
-directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
+# directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
 
 # Specify the path where you saved the dictionary
 load_path = directory + 'final/datalist_small.pkl' #no_out.pkl'
@@ -65,7 +66,7 @@ args['num_layers'] = 5  # number of layers in MLP
 args['hidden_channels'] = 64  # 64
 args['dropout'] = 0.2
 args['batch_size'] = 256
-args['num_epochs'] = 100
+args['num_epochs'] = 5
 args['lr'] = 0.01
 # args['gradient_clip_norm'] = 1.0
 # args['network_weight_decay'] = 0.0001
@@ -89,7 +90,7 @@ Sweeps
 wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 
 sweep_config = {
-    'program': 'main.py',
+    'program': 'sweep_run.py',
     'method': 'bayes',
     'metric': {'goal': 'maximize', 'name': 'AUC test'},
     }
@@ -118,9 +119,12 @@ parameters_dict.update({
 
 sweep_config['parameters'] = parameters_dict
 
-if __name__ == '__main__':
-    sweep_id = wandb.sweep(sweep_config, project="GDL_molecular_activity_prediction_SWEEPS")
+sweep_id = wandb.sweep(sweep_config, project="GDL_molecular_activity_prediction_SWEEPS")
 
-    # %%
-    # run the sweep
-    wandb.agent(sweep_id, run_sweep(data_splits, args), count=4)
+# %%
+
+# save args dictionary with pickle
+with open('wandb/args.pkl', 'wb') as f:
+    pickle.dump(args, f)
+# run the sweep
+wandb.agent(sweep_id, run_sweep(data_splits, args), count=3)
