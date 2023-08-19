@@ -5,19 +5,23 @@ import wandb
 # check if cuda is available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-import train
+# import train
 import load_data
 import support_funcs
+import sweep_run
+
 
 import importlib
 # this method of import ensures that when support scripts are updated, the changes are imported in this script
 importlib.reload(support_funcs)
 importlib.reload(load_data)
-importlib.reload(train)
+# importlib.reload(train)
+importlib.reload(sweep_run)
 
-from train import *
+# from train import *
 from load_data import *
 from support_funcs import *
+from sweep_run import *
 
 # %%
 '''
@@ -41,6 +45,7 @@ Config
 
 args = {}
 args['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+args['directory'] = directory
 
 # data parameters
 args['num_data_points'] = 324191  # all=324191 # number of data points to use
@@ -73,40 +78,49 @@ args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 print('Assays used:', args['assay_list'], 'Assay indeces:', args['assays_idx'])
 
 # create dataset splits (train, val, test) on device given args
-data_splits = prepare_splits(data_list, args)
+data_splits = prepare_splits_forCV(data_list, args)
 
+args['best_auc'] = 0
 
-# %%
+#%%
 '''
-Run experiments
+Sweeps
 '''
 wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
-# API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
-# Create a custom run name dynamically
-run_name = f"{args['model']}_b{args['batch_size']}_d{args['dropout']}_hdim{args['hidden_channels']}_ass{args['assay_list'][0]}_noout"
-run = wandb.init(
-    name=run_name,
-    # Set the project where this run will be logged
-    project="GDL_molecular_activity_prediction",
-    # Track hyperparameters and run metadata
-    config={
-        'num_data_points': args['num_data_points'],
-        'assays': args['assay_list'],
-        'num_assays': args['num_assays'],
+sweep_config = {
+    'program': 'main.py',
+    'method': 'bayes',
+    'metric': {'goal': 'maximize', 'name': 'AUC test'},
+    }
+parameters_dict = {
+    'batch_size': {
+        'values': [128, 256, 512, 1014]
+        },
+    'dropout': {
+        'values': [0.3, 0.5]
+        },
+    'hidden_channels': {
+        'values': [64, 128, 256]
+        },
+    }
 
-        'model': args['model'],
-        'num_layers': args['num_layers'],
-        'hidden_channels': args['hidden_channels'],
-        'dropout': args['dropout'],
-        'batch_size': args['batch_size'],
-        'lr': args['lr'],
-        'lr_decay': args['lr_decay_factor'],
+parameters_dict.update({
+    'assays': {
+        'value': args['assay_list']},
+    'num_data_points': {
+        'value': args['num_data_points']},
+    'num_layers': {
+        'value': args['num_layers']},
+    'lr': {
+        'value': args['lr']}
     })
 
-# create dataset from data_list
-dataloader = prepare_dataloader(data_splits, args)
+sweep_config['parameters'] = parameters_dict
 
-# train model
-exp = TrainManager(dataloader, args)
-exp.train(epochs=10, log=True, wb_log=True)
+if __name__ == '__main__':
+    sweep_id = wandb.sweep(sweep_config, project="GDL_molecular_activity_prediction_SWEEPS")
+
+    # %%
+    # run the sweep
+    wandb.agent(sweep_id, run_sweep(data_splits, args), count=4)

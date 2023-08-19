@@ -81,6 +81,29 @@ def prepare_splits(data_list, args):
     print(f'Number of validation graphs:', len(data_splits['val']))
     print(f'Number of test graphs:', len(data_splits['test']))
     print(f'Example of a graph data object: {data_list[0]}')
+    print('Data on device cuda [train, val, test]:', [
+          d.is_cuda for d in [data_splits['train'][0], data_splits['val'][0], data_splits['test'][0]]])
+
+    return data_splits
+
+
+def prepare_splits_forCV(data_list, args):
+
+    data_list = data_list[:args['num_data_points']]
+
+    data_splits = {}
+    # split into train and test
+    # split into train and validation later in cross-validation
+    # train-val not yet on cuda -> to cuda later in cross-validation
+    data_splits['train-val'] = data_list[:int(len(data_list)*0.8)]
+    data_splits['test'] = [d.to(args['device'])
+                           for d in data_list[int(len(data_list)*0.8):]]
+
+    print(f'Number of training + validation graphs:', len(data_splits['train-val']))
+    print(f'Number of test graphs:', len(data_splits['test']))
+    print(f'Example of a graph data object: {data_list[0]}')
+    print('Data on device cuda [train-val, test]:', [
+          d.is_cuda for d in [data_splits['train-val'][0], data_splits['test'][0]]])
 
     return data_splits
 
