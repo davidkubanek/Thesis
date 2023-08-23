@@ -302,7 +302,9 @@ class TrainManager:
         torch.save(self.model.state_dict(),
                    os.path.join(folder, filename+'.pt'))
 
-    def load_model(self, folder, filename):
+    def load_model(self, folder):
+        filename = 'ass' + \
+            self.args['assay_list'][0] + '_' + self.args['model']
         print('loading model...')
         self.model.load_state_dict(torch.load(
             os.path.join(folder, filename+'.pt')))
