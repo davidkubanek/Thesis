@@ -88,8 +88,8 @@ wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 
 # assay_groups['cell_based_high_hr'][-2:]:
 # ['2797', '2796', '1979', '602248', '1910']:
-for assay in assay_groups['non_cell_based_high_hr'][1:5]:
-    for model in ['FP', 'GROVER_FP']:
+for assay in ['2797', '2796', '1979', '602248', '1910']:
+    for model in ['GCN', 'GCN_FP']:
         args['assay_list'] = [assay]
         args['assays_idx'] = find_assay_indeces(
             args['assay_list'], assay_order)
@@ -112,7 +112,7 @@ for assay in assay_groups['non_cell_based_high_hr'][1:5]:
                 'values': [128, 256]
             },
             'dropout': {
-                'values': [0.2, 0.3]
+                'values': [0.1, 0.2, 0.3]
             },
             'hidden_channels': {
                 'values': [64, 128, 256]
