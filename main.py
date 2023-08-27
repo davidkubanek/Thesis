@@ -83,7 +83,11 @@ args['assay_list'] = ['2797']
 args['num_assays'] = 1
 args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
+<<<<<<< HEAD
 args['model'] = 'LR'
+=======
+args['model'] = 'GCN'
+>>>>>>> 5bfdbc441cffc52c99fb4cb1d84c832a416ab318
 args['dropout'] = 0.3
 args['batch_size'] = 256
 args['hidden_channels'] = 256
@@ -117,4 +121,8 @@ dataloader = prepare_dataloader(data_splits, args)
 
 # train model
 exp = TrainManager(dataloader, args)
+<<<<<<< HEAD
 exp.train(epochs=20, log=True, wb_log=False, early_stop=True)
+=======
+exp.train(epochs=5, log=True, wb_log=True, early_stop=True)
+>>>>>>> 5bfdbc441cffc52c99fb4cb1d84c832a416ab318

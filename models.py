@@ -27,6 +27,8 @@ class GCN(nn.Module):
         num_node_features = args['num_node_features']
         hidden_channels = args['hidden_channels']
         num_classes = args['num_assays']
+        self.dropout = args['dropout']
+
         if args['model'] == 'GCN_FP':
             fp_dim = args['fp_dim']
         else:
@@ -59,7 +61,7 @@ class GCN(nn.Module):
             # print('AFTER CONCAT x:',x.shape)
 
         # 3. Apply a final classifier
-        x = F.dropout(x, p=0.1, training=self.training)
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.lin(x)
 
         return x
