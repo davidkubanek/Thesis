@@ -88,7 +88,7 @@ wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 
 # assay_groups['cell_based_high_hr'][-2:]:
 # ['2797', '2796', '1979', '602248', '1910']:
-for assay in ['2797', '2796', '1979', '602248', '1910']:
+for assay in ['1259313', '624204', '652039']:
     for model in ['GCN', 'GCN_FP']:
         args['assay_list'] = [assay]
         args['assays_idx'] = find_assay_indeces(
