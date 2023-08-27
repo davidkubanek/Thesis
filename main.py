@@ -14,12 +14,13 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 '''
 Load data
 '''
-directory = 'data/'
+#directory = 'data/'
 # directory = '/content/drive/MyDrive/Thesis/Data/'
-# directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
+directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
+#directory = 'Data/PubChem Data/'
 
 # Specify the path where you saved the dictionary
-load_path = directory + 'final/datalist_no_out.pkl'  # no_out.pkl'
+load_path = directory + 'final/datalist_small.pkl'  # no_out.pkl'
 
 print('\nLoading data...')
 data_list, assay_groups, assay_order = load_datalist(directory, load_path)
@@ -82,38 +83,38 @@ args['assay_list'] = ['2797']
 args['num_assays'] = 1
 args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
-args['model'] = 'GROVER_FP'
+args['model'] = 'LR'
 args['dropout'] = 0.3
 args['batch_size'] = 256
 args['hidden_channels'] = 256
-args['num_epochs'] = 5
+args['num_epochs'] = 20
 args['num_layers'] = 3
 args['lr'] = 0.01
 
 # Create a custom run name dynamically
-run_name = f"{args['model']}_b{args['batch_size']}_d{args['dropout']}_hdim{args['hidden_channels']}_ass{args['assay_list'][0]}_noout_decay"
-run = wandb.init(
-    name=run_name,
-    # Set the project where this run will be logged
-    project="GDL_molecular_activity_prediction",
-    # Track hyperparameters and run metadata
-    config={
-        'num_data_points': args['num_data_points'],
-        'assays': 'cell_based_high_hr',
-        'num_assays': args['num_assays'],
+# run_name = f"{args['model']}_b{args['batch_size']}_d{args['dropout']}_hdim{args['hidden_channels']}_ass{args['assay_list'][0]}_noout_decay"
+# run = wandb.init(
+#     name=run_name,
+#     # Set the project where this run will be logged
+#     project="GDL_molecular_activity_prediction",
+#     # Track hyperparameters and run metadata
+#     config={
+#         'num_data_points': args['num_data_points'],
+#         'assays': 'cell_based_high_hr',
+#         'num_assays': args['num_assays'],
 
-        'model': args['model'],
-        'num_layers': args['num_layers'],
-        'hidden_channels': args['hidden_channels'],
-        'dropout': args['dropout'],
-        'batch_size': args['batch_size'],
-        'num_epochs': args['num_epochs'],
-        'lr': args['lr'],
-    })
+#         'model': args['model'],
+#         'num_layers': args['num_layers'],
+#         'hidden_channels': args['hidden_channels'],
+#         'dropout': args['dropout'],
+#         'batch_size': args['batch_size'],
+#         'num_epochs': args['num_epochs'],
+#         'lr': args['lr'],
+#     })
 
 # create dataset from data_list
 dataloader = prepare_dataloader(data_splits, args)
 
 # train model
 exp = TrainManager(dataloader, args)
-exp.train(epochs=60, log=True, wb_log=True, early_stop=True)
+exp.train(epochs=20, log=True, wb_log=False, early_stop=True)

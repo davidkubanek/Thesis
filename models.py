@@ -172,3 +172,17 @@ class MLP(nn.Module):
                 torch.cat([fingerprints, grover_fp], dim=1))
 
         return output
+
+class LogisticRegression(nn.Module):
+    def __init__(self, input_dim):
+        super(LogisticRegression, self).__init__()
+        self.input_dim = input_dim
+        self.linear = nn.Linear(input_dim, 1)
+
+    def forward(self, x):
+        # reshape fp to batch_size x fp_dim
+        x = x.reshape(
+            int(x.shape[0]/self.input_dim), -1)
+            
+        outputs = torch.sigmoid(self.linear(x))
+        return outputs
