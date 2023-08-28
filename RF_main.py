@@ -1,10 +1,10 @@
 # %%
-from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 from load_data import *
 from support_funcs import *
 from sweep_run import *
 from train import *
+from random_forest import *
 
 import torch
 import wandb
@@ -42,31 +42,12 @@ args['num_data_points'] = 324191  # all=324191 # number of data points to use
 args['num_assays'] = 5  # number of assays to use (i.e., no. of output classes)
 args['assay_start'] = 0  # which assay to start from
 args['assay_order'] = assay_order
-# number of node features in graph representation
-args['num_node_features'] = 79
-# grover_fp['fps'][0].shape[0] # None  # dim of grover fingerprints
-args['grover_fp_dim'] = 5000
-args['fp_dim'] = 2215  # dim of fingerprints
-
 
 # training parameters
-args['model'] = 'LR'  # 'GCN', 'GCN_FP', 'FP', 'GROVER', 'GROVER_FP'
-args['num_layers'] = 5  # number of layers in MLP
-args['hidden_channels'] = 64  # 64
-args['dropout'] = 0.2
-args['batch_size'] = 256
-args['num_epochs'] = 5
-args['lr'] = 0.01
-# args['gradient_clip_norm'] = 1.0
-# args['network_weight_decay'] = 0.0001
-args['lr_decay_factor'] = 0.5
+args['model'] = 'RF'  # 'GCN', 'GCN_FP', 'FP', 'GROVER', 'GROVER_FP'
 
-# assay parameters
-args['assay_list'] = [assay_groups['non_cell_based_high_hr'][0]]  # ['2797']
-args['num_assays'] = 1
-args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
-print('Assays used:', args['assay_list'], 'Assay indeces:', args['assays_idx'])
-
+if args['model'] == 'RF':
+    args['device'] = 'cpu'
 # create dataset splits (train, val, test) on device given args
 data_splits = prepare_splits(data_list, args)
 
@@ -79,23 +60,17 @@ Run
 # %%
 wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
-
 for assay in ['2797', '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
+
     # assay parameters
     args['assay_list'] = [assay]
     args['num_assays'] = 1
     args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
-    args['model'] = 'LR'
-    args['dropout'] = 0
-    args['batch_size'] = 256
-    args['hidden_channels'] = 256
-    args['num_epochs'] = 100
-    args['num_layers'] = 3
-    args['lr'] = 0.01
+    args['model'] = 'RF'
 
     # Create a custom run name dynamically
-    run_name = f"ass{args['assay_list'][0]}_{args['model']}"
+    run_name = f"ass{assay}_{args['model']}"
     run = wandb.init(
         name=run_name,
         # Set the project where this run will be logged
@@ -103,19 +78,53 @@ for assay in ['2797', '2796', '1979', '602248', '1910', '602274', '720582', '125
         # Track hyperparameters and run metadata
         config={
             'num_data_points': args['num_data_points'],
-            'assays': args['assay_list'],
+            'assays': 'cell_based_high_hr',
             'num_assays': args['num_assays'],
 
             'model': args['model'],
-            'dropout': args['dropout'],
-            'batch_size': args['batch_size'],
-            'num_epochs': args['num_epochs'],
-            'lr': args['lr'],
         })
 
-    # create dataset from data_list
-    dataloader = prepare_dataloader(data_splits, args)
+    print('\n\n====================================================')
+    print('Assays:', args['assay_list'], '| Model:', args['model'])
+    print('====================================================\n')
 
-    # train model
-    exp = TrainManager(dataloader, args)
-    exp.train(epochs=100, log=True, wb_log=True, early_stop=True)
+    X_train, y_train = prep_data_matrix(data_splits['train'], args)
+
+    print('train shape:', X_train.shape, y_train.shape)
+
+    clf = RandomForestClassifier(n_estimators=100)
+    print('Fitting RF...')
+    clf.fit(X_train, y_train.flatten())
+
+    print('Predicting...')
+    X_test, y_test = prep_data_matrix(data_splits['test'], args)
+
+    print('test shape:', X_test.shape, y_test.shape)
+
+    # Predict and evaluate
+    y_pred = clf.predict(X_test)
+    print('Evaluating...')
+    accuracy, auc, precision, recall, f1 = eval_RF(y_test, y_pred)
+
+    print(f"\nAccuracy: {accuracy * 100:.2f}%")
+    print(f"AUC: {auc * 100:.2f}%")
+    print(f"Precision: {precision * 100:.2f}%")
+    print(f"Recall: {recall * 100:.2f}%")
+    print(f"F1 Score: {f1 * 100:.2f}%")
+
+    wandb.log({'AUC test': auc, 'F1 test': f1,
+               'Precision test': precision, 'Recall test': recall})
+
+    # eval train performance
+    # y_pred = clf.predict(X_train)
+
+    # accuracy, auc, precision, recall, f1 = eval_RF(y_train, y_pred)
+
+    # print(f"\nAccuracy Train: {accuracy * 100:.2f}%")
+    # print(f"AUC Train: {auc * 100:.2f}%")
+    # print(f"Precision Train: {precision * 100:.2f}%")
+    # print(f"Recall Train: {recall * 100:.2f}%")
+    # print(f"F1 Score Train: {f1 * 100:.2f}%")
+
+    # wandb.log({'AUC train': auc, 'F1 train': f1,
+    #            'Precision train': precision, 'Recall train': recall})

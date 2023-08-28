@@ -70,7 +70,7 @@ wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
 # , '2796', '1979', '602248', '1910', '602274', '720582', '1259313']:# '624204', '652039']
-for assay in ['624204', '652039']:
+for assay in ['602274']:  # '602274'
     for model in ['FP', 'GROVER_FP']:
 
         # assay parameters
@@ -100,9 +100,9 @@ for assay in ['624204', '652039']:
         args['lr'] = 0.01
 
         # Create a custom run name dynamically
-        run_name = f"ass{args['assay_list'][0]}_{args['model']}_best"
+        # run_name = f"ass{args['assay_list'][0]}_{args['model']}_best"
         run = wandb.init(
-            name=run_name,
+            # name=run_name,
             # Set the project where this run will be logged
             project="GDL_molecular_activity_prediction_SWEEPS",
             # Track hyperparameters and run metadata
@@ -126,10 +126,10 @@ for assay in ['624204', '652039']:
         # train model
         exp = TrainManager(dataloader, args)
         # load saved model
-        folder = args['directory'] + 'trained_models/'
-        exp.load_model(folder)
+        # folder = args['directory'] + 'trained_models/'
+        # exp.load_model(folder)
         # finish training
-        exp.train(epochs=50, log=True, wb_log=True, early_stop=True)
+        exp.train(epochs=120, log=True, wb_log=True, early_stop=True)
         # save model
         folder = args['directory'] + 'trained_models/120epochs/'
         exp.save_model(folder)
