@@ -1,10 +1,9 @@
 # %%
-from sklearn.ensemble import RandomForestClassifier
-import numpy as np
 from load_data import *
 from support_funcs import *
 from sweep_run import *
 from train import *
+from models import *
 
 import torch
 import wandb
@@ -16,13 +15,13 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 '''
 Load data
 '''
-directory = 'data/'
+# directory = 'data/'
 # directory = '/content/drive/MyDrive/Thesis/Data/'
-# directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
+directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
 # directory = 'Data/PubChem Data/'
 
 # Specify the path where you saved the dictionary
-load_path = directory + 'final/datalist_no_out.pkl'  # no_out.pkl'
+load_path = directory + 'final/datalist_small.pkl'  # no_out.pkl'
 
 print('\nLoading data...')
 data_list, assay_groups, assay_order = load_datalist(directory, load_path)
@@ -50,72 +49,94 @@ args['fp_dim'] = 2215  # dim of fingerprints
 
 
 # training parameters
-args['model'] = 'LR'  # 'GCN', 'GCN_FP', 'FP', 'GROVER', 'GROVER_FP'
-args['num_layers'] = 5  # number of layers in MLP
+args['model'] = 'GCN_MLP'  # 'GCN', 'GCN_FP', 'FP', 'GROVER', 'GROVER_FP'
+args['num_layers'] = 3  # number of layers in MLP
 args['hidden_channels'] = 64  # 64
+args['hidden_channels_conv'] = 64
 args['dropout'] = 0.2
 args['batch_size'] = 256
 args['num_epochs'] = 5
 args['lr'] = 0.01
-# args['gradient_clip_norm'] = 1.0
-# args['network_weight_decay'] = 0.0001
-args['lr_decay_factor'] = 0.5
-
-# assay parameters
-args['assay_list'] = [assay_groups['non_cell_based_high_hr'][0]]  # ['2797']
-args['num_assays'] = 1
-args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
-print('Assays used:', args['assay_list'], 'Assay indeces:', args['assays_idx'])
 
 # create dataset splits (train, val, test) on device given args
 data_splits = prepare_splits(data_list, args)
 
 args['best_auc'] = 0
 
+
+# %%
+
+# create dataset from data_list
+dataloader = prepare_dataloader(data_splits, args)
+
+args['assay_list'] = ['2797']
+args['num_assays'] = 1
+args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
+
+print('TESTING')
+for model_type in ['GCN_MLP','GCN_MLP_FP']:
+  args['model'] = model_type
+  model = GCN_MLP(args)
+  for data in dataloader['train']:  # Iterate in batches over the training dataset
+          print(f'------{model_type}------')
+          print('inputs:')
+          print(' x:', data.x.shape, '| y:',data.y.shape, '| fp:',data.fp.shape, '| grover:', data.grover_fp.shape)
+          # print num of params in model
+          print('num of params:', sum(p.numel() for p in model.parameters() if p.requires_grad))
+          if args['model'] == 'GCN_MLP': # Perform a single forward pass
+              out = model(data.x, data.edge_index, data.batch)
+          elif args['model'] == 'GCN_MLP_FP':
+              out = model(data.x, data.edge_index, data.batch, fp=data.fp)
+          print('out:',out.shape)
+          print('gt:', data.y[:,args['assays_idx']].shape)
+          break
+  
+
 # %%
 '''
 Run
 '''
 # %%
-wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
-# API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
+# wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
+# # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
-for assay in ['2797', '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
-    # assay parameters
-    args['assay_list'] = [assay]
-    args['num_assays'] = 1
-    args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
+# for assay in ['2797']: #, '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
+#     # assay parameters
+#     args['assay_list'] = [assay]
+#     args['num_assays'] = 1
+#     args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
-    args['model'] = 'LR'
-    args['dropout'] = 0
-    args['batch_size'] = 256
-    args['hidden_channels'] = 256
-    args['num_epochs'] = 100
-    args['num_layers'] = 3
-    args['lr'] = 0.01
+#     args['model'] = 'GCN_MLP'
+#     args['dropout'] = 0.1
+#     args['batch_size'] = 256
+#     args['hidden_channels'] = 256
+#     args['hidden_channels_conv'] = 64
+#     args['num_epochs'] = 100
+#     args['num_layers'] = 3
+#     args['lr'] = 0.01
 
-    # Create a custom run name dynamically
-    run_name = f"ass{args['assay_list'][0]}_{args['model']}"
-    run = wandb.init(
-        name=run_name,
-        # Set the project where this run will be logged
-        project="GDL_molecular_activity_prediction_BASE",
-        # Track hyperparameters and run metadata
-        config={
-            'num_data_points': args['num_data_points'],
-            'assays': args['assay_list'],
-            'num_assays': args['num_assays'],
+#     # Create a custom run name dynamically
+#     run_name = f"ass{args['assay_list'][0]}_{args['model']}"
+#     run = wandb.init(
+#         name=run_name,
+#         # Set the project where this run will be logged
+#         project="GDL_molecular_activity_prediction_BASE",
+#         # Track hyperparameters and run metadata
+#         config={
+#             'num_data_points': args['num_data_points'],
+#             'assays': args['assay_list'],
+#             'num_assays': args['num_assays'],
 
-            'model': args['model'],
-            'dropout': args['dropout'],
-            'batch_size': args['batch_size'],
-            'num_epochs': args['num_epochs'],
-            'lr': args['lr'],
-        })
+#             'model': args['model'],
+#             'dropout': args['dropout'],
+#             'batch_size': args['batch_size'],
+#             'num_epochs': args['num_epochs'],
+#             'lr': args['lr'],
+#         })
 
-    # create dataset from data_list
-    dataloader = prepare_dataloader(data_splits, args)
+#     # create dataset from data_list
+#     dataloader = prepare_dataloader(data_splits, args)
 
-    # train model
-    exp = TrainManager(dataloader, args)
-    exp.train(epochs=100, log=True, wb_log=True, early_stop=True)
+#     # train model
+#     exp = TrainManager(dataloader, args)
+#     exp.train(epochs=100, log=True, wb_log=True, early_stop=True)

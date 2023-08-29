@@ -31,7 +31,7 @@ class GCN(nn.Module):
 
         if args['model'] == 'GCN_FP':
             fp_dim = args['fp_dim']
-        else:
+        else: #aka only GCN
             fp_dim = 0
 
         self.conv1 = GCNConv(num_node_features, hidden_channels)
@@ -189,3 +189,66 @@ class LogisticRegression(nn.Module):
 
         outputs = torch.sigmoid(self.linear(x))
         return outputs
+
+
+class GCN_MLP(nn.Module):
+    '''
+    Define a Graph Convolutional Network (GCN) model architecture.
+    Can include 'graph' only or 'graph + fingerprints' embedding before final classification layer.
+    '''
+
+    def __init__(self, args):
+        super(GCN_MLP, self).__init__()
+        torch.manual_seed(12345)
+
+        self.num_node_features = args['num_node_features']
+        self.hidden_dim_conv = args['hidden_channels_conv']
+        self.hidden_dim_MLP = args['hidden_channels']
+        self.output_dim = args['num_assays']
+        self.num_layers = args['num_layers']
+        self.dropout = args['dropout']
+
+        if args['model'] == 'GCN_MLP_FP':
+            self.fp_dim = args['fp_dim']
+        else: #aka only GCN_MLP
+            self.fp_dim = 0
+        
+        
+
+        self.conv1 = GCNConv(self.num_node_features, self.hidden_dim_conv)
+        self.conv2 = GCNConv(self.hidden_dim_conv, self.hidden_dim_conv)
+        self.conv3 = GCNConv(self.hidden_dim_conv, self.hidden_dim_conv)
+
+
+        self.ff_layers = construct_mlp(
+            self.fp_dim + self.hidden_dim_conv,
+            self.output_dim,
+            self.hidden_dim_MLP,
+            self.num_layers,
+            self.dropout
+        )
+
+    def forward(self, x, edge_index, batch, fp=None):
+        # 1. Obtain node embeddings
+        x = self.conv1(x, edge_index)
+        x = x.relu()
+        x = self.conv2(x, edge_index)
+        x = x.relu()
+        x = self.conv3(x, edge_index)
+
+        # 2. Readout layer
+        x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
+
+        # if also using fingerprints
+        if fp is not None:
+            # reshape fp to batch_size x fp_dim
+            fp = fp.reshape(x.shape[0], -1)
+            # concatenate graph node embeddings with fingerprint
+            print('BEFORE CONCAT x:',x.shape, 'fp:', fp.shape)
+            x = torch.cat([x, fp], dim=1)
+            print('AFTER CONCAT x:',x.shape)
+
+        # 3. Apply a final classifier
+        output = self.ff_layers(x)
+        
+        return output
