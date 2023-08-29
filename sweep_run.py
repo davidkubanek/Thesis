@@ -42,6 +42,11 @@ def run_sweep(data_splits, args):
             folder = args['directory'] + 'trained_models/'
 
             filename = 'ass' + args['assay_list'][0] + '_' + args['model']
+
+            # Check if directory exists, if not, create it
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+
             print('saving trained model...')
             torch.save(model_weights,
                        os.path.join(folder, filename+'.pt'))

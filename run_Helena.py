@@ -61,7 +61,8 @@ args['fp_dim'] = 2215  # dim of fingerprints
 
 
 # training parameters
-args['model'] = 'GROVER_FP'  # 'GCN', 'GCN_FP', 'FP', 'GROVER', 'GROVER_FP'
+# 'LR, 'GCN', 'GCN_FP', 'GCN_MLP', 'GCN_MLP_FP', 'FP', 'GROVER', 'GROVER_FP'
+args['model'] = 'GCN_MLP'
 args['num_layers'] = 3  # number of layers in MLP
 args['hidden_channels'] = 64  # 64
 args['hidden_channels_conv'] = 64
@@ -69,14 +70,6 @@ args['dropout'] = 0.2
 args['batch_size'] = 256
 args['num_epochs'] = 70
 args['lr'] = 0.01
-# args['gradient_clip_norm'] = 1.0
-# args['network_weight_decay'] = 0.0001
-args['lr_decay_factor'] = 0.5
-
-# assay parameters
-args['assay_list'] = [assay_groups['non_cell_based_high_hr'][0]]  # ['2797']
-args['num_assays'] = 1
-args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
 args['best_auc'] = 0
 
@@ -86,13 +79,10 @@ Sweeps
 '''
 wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 
-
-# assay_groups['cell_based_high_hr'][-2:]:
-# ['2797', '2796', '1979', '602248', '1910']:
-# , '2796', '1979', '602248', '1910',  '602274', '720582', '1259313', '624204', '652039']:
-for assay in ['2797']:
-    for model in ['GCN_MLP']:
+for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582', '1259313', '624204', '652039']:
+    for model in ['GCN_MLP', 'GCN_MLP_FP']:
         args['assay_list'] = [assay]
+        args['num_assays'] = len(args['assay_list'])
         args['assays_idx'] = find_assay_indeces(
             args['assay_list'], assay_order)
         args['model'] = model
@@ -128,6 +118,9 @@ for assay in ['2797']:
                 'value': args['num_data_points']},
             'num_layers': {
                 'value': args['num_layers']},
+            'hidden_channels_conv': {
+                'value': args['hidden_channels_conv']
+            },
             'lr': {
                 'value': args['lr']}
         })
@@ -144,5 +137,3 @@ for assay in ['2797']:
             pickle.dump(args, f)
         # run the sweep
         wandb.agent(sweep_id, count=6)
-# %%
-# add early stopping for any fold that is below 0.5 and there is already a better result for a different hyperparam setting

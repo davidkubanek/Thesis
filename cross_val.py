@@ -46,6 +46,10 @@ def cross_val(data_splits, args):
         CV_results['recall_test'].append(exp.eval_metrics['recall_test'][-1])
         # save fold metrics into file
         folder = args['directory'] + 'CV_results/'
+        # Check if directory exists, if not, create it
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
         exp.save_results(folder, save_logs=True)
 
         del data_splits['train']

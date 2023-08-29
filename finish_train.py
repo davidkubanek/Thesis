@@ -70,8 +70,8 @@ wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
 # , '2796', '1979', '602248', '1910', '602274', '720582', '1259313']:# '624204', '652039']
-for assay in ['602274']:  # '602274'
-    for model in ['FP', 'GROVER_FP']:
+for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582']:  # '602274'
+    for model in ['GROVER']:
 
         # assay parameters
         args['assay_list'] = [assay]

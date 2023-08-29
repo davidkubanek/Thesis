@@ -31,7 +31,7 @@ class GCN(nn.Module):
 
         if args['model'] == 'GCN_FP':
             fp_dim = args['fp_dim']
-        else: #aka only GCN
+        else:  # aka only GCN
             fp_dim = 0
 
         self.conv1 = GCNConv(num_node_features, hidden_channels)
@@ -210,15 +210,12 @@ class GCN_MLP(nn.Module):
 
         if args['model'] == 'GCN_MLP_FP':
             self.fp_dim = args['fp_dim']
-        else: #aka only GCN_MLP
+        else:  # aka only GCN_MLP
             self.fp_dim = 0
-        
-        
 
         self.conv1 = GCNConv(self.num_node_features, self.hidden_dim_conv)
         self.conv2 = GCNConv(self.hidden_dim_conv, self.hidden_dim_conv)
         self.conv3 = GCNConv(self.hidden_dim_conv, self.hidden_dim_conv)
-
 
         self.ff_layers = construct_mlp(
             self.fp_dim + self.hidden_dim_conv,
@@ -244,11 +241,11 @@ class GCN_MLP(nn.Module):
             # reshape fp to batch_size x fp_dim
             fp = fp.reshape(x.shape[0], -1)
             # concatenate graph node embeddings with fingerprint
-            print('BEFORE CONCAT x:',x.shape, 'fp:', fp.shape)
+            # print('BEFORE CONCAT x:', x.shape, 'fp:', fp.shape)
             x = torch.cat([x, fp], dim=1)
-            print('AFTER CONCAT x:',x.shape)
+            # print('AFTER CONCAT x:', x.shape)
 
         # 3. Apply a final classifier
         output = self.ff_layers(x)
-        
+
         return output

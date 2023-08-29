@@ -31,6 +31,8 @@ class TrainManager:
                 self.model = MLP(args)
             elif args['model'] in ['LR']:
                 self.model = LogisticRegression(args['fp_dim'])
+            elif args['model'] in ['GCN_MLP', 'GCN_MLP_FP']:
+                self.model = GCN_MLP(args)
         else:
             self.model = model
 
@@ -88,16 +90,15 @@ class TrainManager:
                     param.grad = None
 
                 # forward pass based on model type
-                if self.args['model'] == 'GCN':
+                if self.args['model'] in ['GCN', 'GCN_MLP']:
                     out = self.model(data.x, data.edge_index, data.batch)
-                elif self.args['model'] == 'GCN_FP':
+                elif self.args['model'] in ['GCN_FP', 'GCN_MLP_FP']:
                     out = self.model(data.x, data.edge_index,
                                      data.batch, fp=data.fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                     out = self.model(data)
                 elif self.args['model'] in ['LR']:
                     out = self.model(data.fp)
-
 
                 # data.y = data.y.unsqueeze(1)
                 # print('data.y:',data.y.shape)
@@ -192,9 +193,9 @@ class TrainManager:
             for data in loader:
 
                 # forward pass based on model type
-                if self.args['model'] == 'GCN':
+                if self.args['model'] in ['GCN', 'GCN_MLP']:
                     out = self.model(data.x, data.edge_index, data.batch)
-                elif self.args['model'] == 'GCN_FP':
+                elif self.args['model'] in ['GCN_FP', 'GCN_MLP_FP']:
                     out = self.model(data.x, data.edge_index,
                                      data.batch, fp=data.fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
