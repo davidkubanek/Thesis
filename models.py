@@ -187,7 +187,7 @@ class LogisticRegression(nn.Module):
         x = x.reshape(
             int(x.shape[0]/self.input_dim), -1)
 
-        outputs = torch.sigmoid(self.linear(x))
+        outputs = self.linear(x)
         return outputs
 
 
