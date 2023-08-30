@@ -69,9 +69,9 @@ with open(directory + 'trained_models/best_run_names.json', 'r') as file:
 wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
-# , '2796', '1979', '602248', '1910', '602274', '720582', '1259313']:# '624204', '652039']
-for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582']:  # '602274'
-    for model in ['GROVER']:
+# '2797', '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']
+for assay in ['652039']:  # '602274'
+    for model in ['GROVER_FP']:
 
         # assay parameters
         args['assay_list'] = [assay]
@@ -95,7 +95,8 @@ for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582']:  #
         print('best hyperparams:', run.config['dropout'], run.config['batch_size'],
               run.config['hidden_channels'])
 
-        args['num_epochs'] = 50
+        args['num_epochs'] = 70
+        pre_trained_epochs = 120
         args['num_layers'] = 3
         args['lr'] = 0.01
 
@@ -126,12 +127,22 @@ for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582']:  #
         # train model
         exp = TrainManager(dataloader, args)
         # load saved model
-        # folder = args['directory'] + 'trained_models/'
-        # exp.load_model(folder)
+        if pre_trained_epochs > 0:
+            folder = args['directory'] + 'trained_models/' + \
+                f'{pre_trained_epochs}epochs/'
+        else:
+            folder = args['directory'] + 'trained_models/'
+        exp.load_model(folder)
+        print(f'Pre-trained model on {pre_trained_epochs} epochs loaded.')
         # finish training
-        exp.train(epochs=120, log=True, wb_log=True, early_stop=True)
+        exp.train(epochs=args['num_epochs'], log=True,
+                  wb_log=True, early_stop=True)
         # save model
-        folder = args['directory'] + 'trained_models/120epochs/'
+        folder = args['directory'] + \
+            f'trained_models/{pre_trained_epochs + exp.curr_epoch}epochs/'
+        # Check if directory exists, if not, create it
+        if not os.path.exists(folder):
+            os.makedirs(folder)
         exp.save_model(folder)
 
         print('Evaluating on test set...')
@@ -146,7 +157,7 @@ for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582']:  #
         print('Saving results...\n\n')
         # save results
         filename = 'all_best_results.csv'
-        folder = args['directory'] + 'trained_models/120epochs/'
+        folder = args['directory'] + 'trained_models/'
 
         # if file exists
         if os.path.exists(os.path.join(
@@ -165,7 +176,7 @@ for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582']:  #
             'batch_size': [args['batch_size']],
             'dropout': [args['dropout']],
             'hidden_dims': [args['hidden_channels']],
-            'epochs': [70+exp.curr_epoch],
+            'epochs': [pre_trained_epochs+exp.curr_epoch],
 
             'loss': exp.eval_metrics['loss'][-1],
 
