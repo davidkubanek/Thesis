@@ -73,11 +73,6 @@ args['lr'] = 0.01
 # args['network_weight_decay'] = 0.0001
 args['lr_decay_factor'] = 0.5
 
-# assay parameters
-args['assay_list'] = [assay_groups['non_cell_based_high_hr'][0]]  # ['2797']
-args['num_assays'] = 1
-args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
-
 args['best_auc'] = 0
 
 # %%
@@ -90,9 +85,10 @@ wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # assay_groups['cell_based_high_hr'][-2:]:
 # ['2797', '2796', '1979', '602248', '1910']:
 # , '2796', '1979', '602248', '1910',  '602274', '720582', '1259313', '624204', '652039']:
-for assay in ['2797']:
-    for model in ['GCN_MLP']:
+for assay in ['2797', '2796', '1979', '602248', '1910',  '602274', '720582', '1259313', '624204', '652039']:
+    for model in ['GCN_MLP_FP_GROVER']:
         args['assay_list'] = [assay]
+        args['num_assays'] = len(args['assay_list'])
         args['assays_idx'] = find_assay_indeces(
             args['assay_list'], assay_order)
         args['model'] = model
@@ -103,6 +99,12 @@ for assay in ['2797']:
         print('====================================================\n')
 
         name = 'ass' + args['assay_list'][0] + '_' + args['model']
+        if len(args['assay_list']) > 1:
+
+            name = 'ass' + \
+                '+'.join([assay for assay in args['assay_list']]) + \
+                '_' + args['model']
+
         sweep_config = {
             'name': name,
             'program': 'sweep_run.py',

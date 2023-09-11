@@ -7,17 +7,15 @@ from models import *
 
 import torch
 import wandb
-# check if cuda is available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 # %%
 '''
 Load data
 '''
-# directory = 'data/'
+directory = 'data/'
 # directory = '/content/drive/MyDrive/Thesis/Data/'
-directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
+# directory = '/Volumes/Kubánek UCL/Data/Thesis MSc/PubChem Data/'
 # directory = 'Data/PubChem Data/'
 
 # Specify the path where you saved the dictionary
@@ -26,6 +24,7 @@ load_path = directory + 'final/datalist_small.pkl'  # no_out.pkl'
 print('\nLoading data...')
 data_list, assay_groups, assay_order = load_datalist(directory, load_path)
 print('SUCCESS: Data loaded.')
+
 
 # %%
 '''
@@ -55,7 +54,7 @@ args['hidden_channels'] = 64  # 64
 args['hidden_channels_conv'] = 64
 args['dropout'] = 0.2
 args['batch_size'] = 256
-args['num_epochs'] = 5
+args['num_epochs'] = 30
 args['lr'] = 0.01
 
 # create dataset splits (train, val, test) on device given args
@@ -69,28 +68,52 @@ args['best_auc'] = 0
 # create dataset from data_list
 dataloader = prepare_dataloader(data_splits, args)
 
-args['assay_list'] = ['2797']
-args['num_assays'] = 1
+args['assay_list'] = ['2797', '2796']
+args['num_assays'] = len(args['assay_list'])
 args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
-print('TESTING')
-for model_type in ['GCN_MLP','GCN_MLP_FP']:
-  args['model'] = model_type
-  model = GCN_MLP(args)
-  for data in dataloader['train']:  # Iterate in batches over the training dataset
-          print(f'------{model_type}------')
-          print('inputs:')
-          print(' x:', data.x.shape, '| y:',data.y.shape, '| fp:',data.fp.shape, '| grover:', data.grover_fp.shape)
-          # print num of params in model
-          print('num of params:', sum(p.numel() for p in model.parameters() if p.requires_grad))
-          if args['model'] == 'GCN_MLP': # Perform a single forward pass
-              out = model(data.x, data.edge_index, data.batch)
-          elif args['model'] == 'GCN_MLP_FP':
-              out = model(data.x, data.edge_index, data.batch, fp=data.fp)
-          print('out:',out.shape)
-          print('gt:', data.y[:,args['assays_idx']].shape)
-          break
-  
+# print('TESTING')
+# for model_type in ['GCN_MLP', 'GCN_MLP_FP', 'GCN_MLP_FP_GROVER']:
+#     args['model'] = model_type
+#     model = GCN_MLP(args)
+#     # model to device
+#     model = model.to(args['device'])
+#     for data in dataloader['train']:  # Iterate in batches over the training dataset
+#         print(f'------{model_type}------')
+#         print('inputs:')
+#         print(' x:', data.x.shape, '| y:', data.y.shape, '| fp:',
+#               data.fp.shape, '| grover:', data.grover_fp.shape)
+#         # print num of params in model
+#         print('num of params:', sum(p.numel()
+#               for p in model.parameters() if p.requires_grad))
+#         if args['model'] == 'GCN_MLP':  # Perform a single forward pass
+#             out = model(data.x, data.edge_index, data.batch)
+#         elif args['model'] == 'GCN_MLP_FP':
+#             out = model(data.x, data.edge_index, data.batch, fp=data.fp)
+#         elif args['model'] == 'GCN_MLP_FP_GROVER':
+#             out = model(data.x, data.edge_index, data.batch,
+#                         fp=data.fp, grover=data.grover_fp)
+#         print('out:', out.shape)
+#         print('gt:', data.y[:, args['assays_idx']].shape)
+#         break
+
+# TEST that MLP runs for all model types
+# print('TESTING')
+# for model_type in ['FP']:
+#     args['model'] = model_type
+#     model = MLP(args)
+#     # model to device
+#     model = model.to(args['device'])
+#     for data in dataloader['train']:  # Iterate in batches over the training dataset
+#         print(f'------{model_type}------')
+#         print('inputs:')
+#         print(' x:', data.x.shape, '| y:', data.y.shape, '| fp:',
+#               data.fp.shape, '| grover:', data.grover_fp.shape)
+#         out = model(data)  # Perform a single forward pass
+#         print('out:', out.shape)
+#         print('gt:', data.y[:, args['assays_idx']].shape)
+#         break
+
 
 # %%
 '''
@@ -98,45 +121,50 @@ Run
 '''
 # %%
 # wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
-# # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
+# API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
-# for assay in ['2797']: #, '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
-#     # assay parameters
-#     args['assay_list'] = [assay]
-#     args['num_assays'] = 1
-#     args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
+# , '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
+for assay in ['2797']:
+    # assay parameters
+    args['assay_list'] = [assay]
+    args['num_assays'] = len(args['assay_list'])
+    args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
-#     args['model'] = 'GCN_MLP'
-#     args['dropout'] = 0.1
-#     args['batch_size'] = 256
-#     args['hidden_channels'] = 256
-#     args['hidden_channels_conv'] = 64
-#     args['num_epochs'] = 100
-#     args['num_layers'] = 3
-#     args['lr'] = 0.01
+    args['model'] = 'GCN_MLP_FP_GROVER'
+    args['dropout'] = 0.1
+    args['batch_size'] = 256
+    args['hidden_channels'] = 256
+    args['hidden_channels_conv'] = 64
+    args['num_epochs'] = 30
+    args['num_layers'] = 3
+    args['lr'] = 0.01
 
-#     # Create a custom run name dynamically
-#     run_name = f"ass{args['assay_list'][0]}_{args['model']}"
-#     run = wandb.init(
-#         name=run_name,
-#         # Set the project where this run will be logged
-#         project="GDL_molecular_activity_prediction_BASE",
-#         # Track hyperparameters and run metadata
-#         config={
-#             'num_data_points': args['num_data_points'],
-#             'assays': args['assay_list'],
-#             'num_assays': args['num_assays'],
+# Create a custom run name dynamically
 
-#             'model': args['model'],
-#             'dropout': args['dropout'],
-#             'batch_size': args['batch_size'],
-#             'num_epochs': args['num_epochs'],
-#             'lr': args['lr'],
-#         })
+# run_name = 'ass' + args['assay_list'][0] + '_' + args['model']
+# if len(args['assay_list']) > 1:
+#     run_name = 'ass' + args['assay_list'][0] + '+' + \
+#         args['assay_list'][1] + '_' + args['model']
+# run = wandb.init(
+#     name=run_name,
+#     # Set the project where this run will be logged
+#     project="GDL_molecular_activity_prediction_BASE",
+#     # Track hyperparameters and run metadata
+#     config={
+#         'num_data_points': args['num_data_points'],
+#         'assays': args['assay_list'],
+#         'num_assays': args['num_assays'],
 
-#     # create dataset from data_list
-#     dataloader = prepare_dataloader(data_splits, args)
+#         'model': args['model'],
+#         'dropout': args['dropout'],
+#         'batch_size': args['batch_size'],
+#         'num_epochs': args['num_epochs'],
+#         'lr': args['lr'],
+#     })
 
-#     # train model
-#     exp = TrainManager(dataloader, args)
-#     exp.train(epochs=100, log=True, wb_log=True, early_stop=True)
+# create dataset from data_list
+dataloader = prepare_dataloader(data_splits, args)
+
+# train model
+exp = TrainManager(dataloader, args)
+exp.train(epochs=20, log=True, wb_log=False, early_stop=True)

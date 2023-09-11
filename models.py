@@ -210,22 +210,27 @@ class GCN_MLP(nn.Module):
 
         if args['model'] == 'GCN_MLP_FP':
             self.fp_dim = args['fp_dim']
+            self.grover_fp_dim = 0
+        elif args['model'] == 'GCN_MLP_FP_GROVER':
+            self.fp_dim = args['fp_dim']
+            self.grover_fp_dim = args['grover_fp_dim']
         else:  # aka only GCN_MLP
             self.fp_dim = 0
+            self.grover_fp_dim = 0
 
         self.conv1 = GCNConv(self.num_node_features, self.hidden_dim_conv)
         self.conv2 = GCNConv(self.hidden_dim_conv, self.hidden_dim_conv)
         self.conv3 = GCNConv(self.hidden_dim_conv, self.hidden_dim_conv)
 
         self.ff_layers = construct_mlp(
-            self.fp_dim + self.hidden_dim_conv,
+            self.fp_dim + self.grover_fp_dim + self.hidden_dim_conv,
             self.output_dim,
             self.hidden_dim_MLP,
             self.num_layers,
             self.dropout
         )
 
-    def forward(self, x, edge_index, batch, fp=None):
+    def forward(self, x, edge_index, batch, fp=None, grover=None):
         # 1. Obtain node embeddings
         x = self.conv1(x, edge_index)
         x = x.relu()
@@ -237,12 +242,21 @@ class GCN_MLP(nn.Module):
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
         # if also using fingerprints
-        if fp is not None:
+        if fp is not None and grover is None:
             # reshape fp to batch_size x fp_dim
             fp = fp.reshape(x.shape[0], -1)
             # concatenate graph node embeddings with fingerprint
             # print('BEFORE CONCAT x:', x.shape, 'fp:', fp.shape)
             x = torch.cat([x, fp], dim=1)
+            # print('AFTER CONCAT x:', x.shape)
+        elif grover is not None:
+            # reshape fp to batch_size x fp_dim
+            fp = fp.reshape(x.shape[0], -1)
+            grover = grover.reshape(x.shape[0], -1)
+            # concatenate graph node embeddings with fingerprint
+            # print('BEFORE CONCAT x:', x.shape, 'fp:',
+            #       fp.shape, 'grover:', grover.shape)
+            x = torch.cat([x, fp, grover], dim=1)
             # print('AFTER CONCAT x:', x.shape)
 
         # 3. Apply a final classifier

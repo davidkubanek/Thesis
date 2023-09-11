@@ -31,7 +31,7 @@ class TrainManager:
                 self.model = MLP(args)
             elif args['model'] in ['LR']:
                 self.model = LogisticRegression(args['fp_dim'])
-            elif args['model'] in ['GCN_MLP', 'GCN_MLP_FP']:
+            elif args['model'] in ['GCN_MLP', 'GCN_MLP_FP', 'GCN_MLP_FP_GROVER']:
                 self.model = GCN_MLP(args)
         else:
             self.model = model
@@ -69,6 +69,15 @@ class TrainManager:
         self.eval_metrics['f1_train'] = []
         self.eval_metrics['f1_test'] = []
 
+        self.eval_metrics['auc_train_each'] = []
+        self.eval_metrics['auc_test_each'] = []
+        self.eval_metrics['precision_train_each'] = []
+        self.eval_metrics['precision_test_each'] = []
+        self.eval_metrics['recall_train_each'] = []
+        self.eval_metrics['recall_test_each'] = []
+        self.eval_metrics['f1_train_each'] = []
+        self.eval_metrics['f1_test_each'] = []
+
     def train(self, epochs=100, log=False, wb_log=False, early_stop=False):
         '''
         Train the model for a given number of epochs.
@@ -95,6 +104,9 @@ class TrainManager:
                 elif self.args['model'] in ['GCN_FP', 'GCN_MLP_FP']:
                     out = self.model(data.x, data.edge_index,
                                      data.batch, fp=data.fp)
+                elif self.args['model'] == 'GCN_MLP_FP_GROVER':
+                    out = self.model(data.x, data.edge_index, data.batch,
+                                     fp=data.fp, grover=data.grover_fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                     out = self.model(data)
                 elif self.args['model'] in ['LR']:
@@ -122,7 +134,30 @@ class TrainManager:
                 acc_train, auc_train, precision_train, recall_train, f1_train = self.eval(
                     self.dataloader['train'])
                 acc_test, auc_test, precision_test, recall_test, f1_test = self.eval(
-                    self.dataloader['val'])
+                    self.dataloader['test'])
+
+                if self.args['num_assays'] > 1:  # multi-assay
+
+                    # save results for individual assay
+                    self.eval_metrics['auc_train_each'].append(auc_train)
+                    self.eval_metrics['auc_test_each'].append(auc_test)
+                    self.eval_metrics['precision_train_each'].append(
+                        precision_train)
+                    self.eval_metrics['precision_test_each'].append(
+                        precision_test)
+                    self.eval_metrics['recall_train_each'].append(recall_train)
+                    self.eval_metrics['recall_test_each'].append(recall_test)
+                    self.eval_metrics['f1_train_each'].append(f1_train)
+                    self.eval_metrics['f1_test_each'].append(f1_test)
+                    # get macro average of metrics
+                    auc_train = np.mean(auc_train)
+                    auc_test = np.mean(auc_test)
+                    f1_train = np.mean(f1_train)
+                    f1_test = np.mean(f1_test)
+                    precision_train = np.mean(precision_train)
+                    precision_test = np.mean(precision_test)
+                    recall_train = np.mean(recall_train)
+                    recall_test = np.mean(recall_test)
 
                 self.eval_metrics['acc_train'].append(acc_train)
                 self.eval_metrics['acc_test'].append(acc_test)
@@ -138,17 +173,39 @@ class TrainManager:
                 if wb_log is True:
                     wandb.log({'epoch': self.curr_epoch, "AUC train": auc_train, "AUC test": auc_test, "F1 train": f1_train, "F1 test": f1_test,
                               "Precision train": precision_train, "Precision test": precision_test, "Recall train": recall_train, "Recall test": recall_test})
+                    if self.args['num_assays'] > 1:
+                        wandb.log({'epoch': self.curr_epoch, "AUC_1 train": self.eval_metrics['auc_train_each'][-1][0], "AUC_2 train": self.eval_metrics['auc_train_each'][-1][1], "AUC_1 test": self.eval_metrics['auc_test_each'][-1][0], "AUC_2 test": self.eval_metrics['auc_test_each'][-1][1], 'F1_1 train': self.eval_metrics['f1_train_each'][-1][0], 'F1_2 train': self.eval_metrics['f1_train_each'][-1][1], 'F1_1 test': self.eval_metrics['f1_test_each'][-1][0], 'F1_2 test': self.eval_metrics['f1_test_each'][-1][1],
+                                   "Precision_1 train": self.eval_metrics['precision_train_each'][-1][0], "Precision_2 train": self.eval_metrics['precision_train_each'][-1][1], "Precision_1 test": self.eval_metrics['precision_test_each'][-1][0], "Precision_2 test": self.eval_metrics['precision_test_each'][-1][1], "Recall_1 train": self.eval_metrics['recall_train_each'][-1][0], "Recall_2 train": self.eval_metrics['recall_train_each'][-1][1], "Recall_1 test": self.eval_metrics['recall_test_each'][-1][0], "Recall_2 test": self.eval_metrics['recall_test_each'][-1][1]})
 
                 if ((epoch+1) % (epochs/2) == 0) or (epoch == 0) or ((epoch+1) > (epochs-3)):
-                    print(
-                        f'Epoch: {self.curr_epoch+1}, Loss: {loss.item():.4f}, Train AUC: {auc_train:.4f}, Test AUC: {auc_test:.4f}')
-                    print(
-                        f'                        Train F1: {f1_train:.4f}, Test F1: {f1_test:.4f}')
+                    if self.args['num_assays'] == 1:
+                        print(
+                            f'Epoch: {self.curr_epoch+1}, Loss: {loss.item():.4f}, Train AUC: {auc_train:.4f}, Test AUC: {auc_test:.4f}')
+                        print(
+                            f'                        Train F1: {f1_train:.4f}, Test F1: {f1_test:.4f}')
+                    else:
+                        print(
+                            f'Epoch: {self.curr_epoch+1}, Loss: {loss.item():.4f}, Train AUC1:'+str(round(self.eval_metrics['auc_train_each'][-1][0], 4))+f', Train AUC2:'+str(round(self.eval_metrics['auc_train_each'][-1][1], 4))+f', Train AUCmacro: {auc_train:.4f}, Test AUC1: '+str(round(self.eval_metrics['auc_test_each'][-1][0], 4))+f', Test AUC2: '+str(round(self.eval_metrics['auc_test_each'][-1][1], 4))+f', Test AUCmacro: {auc_test:.4f}')
+                        print(
+                            f'                        Train F1_1: '+str(round(self.eval_metrics['f1_train_each'][-1][0], 4))+f', Train F1_2: '+str(round(self.eval_metrics['f1_train_each'][-1][1], 4))+f', Train F1macro: {f1_train:.4f}, Test F1_1: '+str(round(self.eval_metrics['f1_test_each'][-1][0], 4))+f', Test F1_2: '+str(round(self.eval_metrics['f1_test_each'][-1][1], 4))+f', Test F1macro: {f1_test:.4f}')
 
             if early_stop and (epoch+1) in [23, 24, 25]:
                 # evaluate
                 acc_test, auc_test, precision_test, recall_test, f1_test = self.eval(
-                    self.dataloader['val'])
+                    self.dataloader['test'])
+
+                if self.args['num_assays'] > 1:  # multi-assay
+                    # save results for individual assay
+                    self.eval_metrics['auc_test_each'].append(auc_test)
+                    self.eval_metrics['precision_test_each'].append(
+                        precision_test)
+                    self.eval_metrics['recall_test_each'].append(recall_test)
+                    self.eval_metrics['f1_test_each'].append(f1_test)
+                    # get macro average of metrics
+                    auc_test = np.mean(auc_test)
+                    f1_test = np.mean(f1_test)
+                    precision_test = np.mean(precision_test)
+                    recall_test = np.mean(recall_test)
 
                 self.eval_metrics['auc_test'].append(auc_test)
                 self.eval_metrics['precision_test'].append(precision_test)
@@ -198,6 +255,9 @@ class TrainManager:
                 elif self.args['model'] in ['GCN_FP', 'GCN_MLP_FP']:
                     out = self.model(data.x, data.edge_index,
                                      data.batch, fp=data.fp)
+                elif self.args['model'] == 'GCN_MLP_FP_GROVER':
+                    out = self.model(data.x, data.edge_index, data.batch,
+                                     fp=data.fp, grover=data.grover_fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                     out = self.model(data)
                 elif self.args['model'] in ['LR']:
@@ -218,12 +278,20 @@ class TrainManager:
         preds = [b[i] for b in preds for i in range(len(b))]
         gts = [b[i] for b in gts for i in range(len(b))]
 
-        auc = roc_auc_score(gts, preds)
-        # Calculate macro-averaged precision, recall, and F1 Score
-        precision = precision_score(
-            gts, preds, average='macro', zero_division=0)
-        recall = recall_score(gts, preds, average='macro', zero_division=0)
-        f1 = f1_score(gts, preds, average='macro', zero_division=0)
+        if self.args['num_assays'] > 1:  # multi-assay
+            auc = roc_auc_score(gts, preds, average=None)
+            f1 = f1_score(gts, preds, average=None, zero_division=0)
+            # Calculate macro-averaged precision, recall, and F1 Score
+            precision = precision_score(
+                gts, preds, average=None, zero_division=0)
+            recall = recall_score(gts, preds, average=None, zero_division=0)
+        else:
+            auc = roc_auc_score(gts, preds, average='macro')
+            f1 = f1_score(gts, preds, average='macro', zero_division=0)
+            # Calculate macro-averaged precision, recall, and F1 Score
+            precision = precision_score(
+                gts, preds, average='macro', zero_division=0)
+            recall = recall_score(gts, preds, average='macro', zero_division=0)
 
         # Derive ratio of correct predictions.
         acc = correct / (len(loader.dataset) * self.args['num_assays'])
@@ -303,16 +371,25 @@ class TrainManager:
             results_df.to_csv(os.path.join(folder, filename), index=False)
 
     def save_model(self, folder):
-
-        filename = 'ass' + \
-            self.args['assay_list'][0] + '_' + self.args['model']
+        if self.args['num_assays'] > 1:
+            filename = 'ass' + \
+                '+'.join([assay for assay in self.args['assay_list']]) + \
+                '_' + self.args['model']
+        else:
+            filename = 'ass' + \
+                self.args['assay_list'][0] + '_' + self.args['model']
         print('saving trained model...')
         torch.save(self.model.state_dict(),
                    os.path.join(folder, filename+'.pt'))
 
     def load_model(self, folder):
-        filename = 'ass' + \
-            self.args['assay_list'][0] + '_' + self.args['model']
+        if self.args['num_assays'] > 1:
+            filename = 'ass' + \
+                '+'.join([assay for assay in self.args['assay_list']]) + \
+                '_' + self.args['model']
+        else:
+            filename = 'ass' + \
+                self.args['assay_list'][0] + '_' + self.args['model']
         print('loading model...')
         self.model.load_state_dict(torch.load(
             os.path.join(folder, filename+'.pt')))

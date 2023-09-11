@@ -68,7 +68,7 @@ args['hidden_channels'] = 64  # 64
 args['hidden_channels_conv'] = 64
 args['dropout'] = 0.2
 args['batch_size'] = 256
-args['num_epochs'] = 100
+args['num_epochs'] = 70
 args['lr'] = 0.01
 
 args['best_auc'] = 0

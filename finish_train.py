@@ -47,7 +47,7 @@ args['fp_dim'] = 2215  # dim of fingerprints
 
 # training parameters
 args['num_layers'] = 3  # number of layers in MLP
-args['num_epochs'] = 5
+args['num_epochs'] = 120
 args['lr'] = 0.01
 
 
@@ -70,8 +70,10 @@ wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
 # '2797', '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']
-for assay in ['652039']:  # '602274'
-    for model in ['GROVER_FP']:
+# for assay in ['2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:  # '602274'
+# , '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
+for assay in ['2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
+    for model in ['GCN_MLP_FP_GROVER']:
 
         # assay parameters
         args['assay_list'] = [assay]
@@ -86,7 +88,12 @@ for assay in ['652039']:  # '602274'
 
         # load in best hyperparameters from best run
         api = wandb.Api()
-        run_id = best_run_names[assay][model]
+        if len(args['assay_list']) > 1:
+            run_id = best_run_names['+'.join(
+                [assay for assay in args['assay_list']])][model]
+
+        else:
+            run_id = best_run_names[assay][model]
         run = api.run(f"GDL_molecular_activity_prediction_SWEEPS/{run_id}")
         args['dropout'] = run.config['dropout']
         args['batch_size'] = run.config['batch_size']
@@ -95,9 +102,10 @@ for assay in ['652039']:  # '602274'
         print('best hyperparams:', run.config['dropout'], run.config['batch_size'],
               run.config['hidden_channels'])
 
-        args['num_epochs'] = 70
-        pre_trained_epochs = 120
+        args['num_epochs'] = 50
+        pre_trained_epochs = 70
         args['num_layers'] = 3
+        args['hidden_channels_conv'] = 64
         args['lr'] = 0.01
 
         # Create a custom run name dynamically
@@ -130,10 +138,11 @@ for assay in ['652039']:  # '602274'
         if pre_trained_epochs > 0:
             folder = args['directory'] + 'trained_models/' + \
                 f'{pre_trained_epochs}epochs/'
+            exp.load_model(folder)
+            print(f'Pre-trained model on {pre_trained_epochs} epochs loaded.')
         else:
-            folder = args['directory'] + 'trained_models/'
-        exp.load_model(folder)
-        print(f'Pre-trained model on {pre_trained_epochs} epochs loaded.')
+            print('No pre-trained model loaded.')
+
         # finish training
         exp.train(epochs=args['num_epochs'], log=True,
                   wb_log=True, early_stop=True)
@@ -149,6 +158,16 @@ for assay in ['652039']:  # '602274'
         # eval on test set
         _, auc_test, precision_test, recall_test, f1_test = exp.eval(
             dataloader['test'])
+
+        print('AUC test:', auc_test, '\nPrecision test:', precision_test,
+              '\nRecall test:', recall_test, '\nF1 test:', f1_test)
+
+        if args['num_assays'] > 1:
+            auc_test = np.mean(auc_test)
+            precision_test = np.mean(precision_test)
+            recall_test = np.mean(recall_test)
+            f1_test = np.mean(f1_test)
+
         wandb.log({'AUC Test': auc_test,
                    'Precision Test': precision_test,
                    'Recall Test': recall_test,
@@ -166,12 +185,22 @@ for assay in ['652039']:  # '602274'
                 folder, filename))
         else:
             # create new
-            results_df = pd.DataFrame(columns=['assay', 'model_name', 'batch_size', 'dropout', 'hidden_dims', 'epochs', 'loss',
+            results_df = pd.DataFrame(columns=['assay', 'type', 'model_name', 'batch_size', 'dropout', 'hidden_dims', 'epochs', 'loss',
                                                'auc_train', 'auc_val', 'auc_test', 'f1_train', 'f1_val', 'f1_test', 'precision_train', 'precision_val', 'precision_test', 'recall_train', 'recall_val', 'recall_test'])
+
+        #
+        assay_name = assay[0]+'+'+assay[1] if len(
+            args['assay_list']) > 1 else args['assay_list'][0]
+
+        if len(args['assay_list']) == 1:
+            assay_type = 'cell-based' if assay in assay_groups['cell_based_high_hr'] else 'biochemical'
+        else:
+            assay_type = 'multi'
 
         # Append results to DataFrame
         new_results_df = pd.DataFrame({
-            'assay': args['assay_list'],
+            'assay': [assay_name],
+            'type': [assay_type],
             'model_name': [args['model']],
             'batch_size': [args['batch_size']],
             'dropout': [args['dropout']],

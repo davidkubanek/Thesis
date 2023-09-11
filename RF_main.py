@@ -1,4 +1,5 @@
 # %%
+import time
 import numpy as np
 from load_data import *
 from support_funcs import *
@@ -10,7 +11,6 @@ import torch
 import wandb
 # check if cuda is available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 # %%
 '''
@@ -60,7 +60,9 @@ Run
 # %%
 wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
 # API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
-for assay in ['2797', '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
+for assay in ['720582']:
+
+    now = time.time()
 
     # assay parameters
     args['assay_list'] = [assay]
@@ -95,6 +97,9 @@ for assay in ['2797', '2796', '1979', '602248', '1910', '602274', '720582', '125
     clf = RandomForestClassifier(n_estimators=100)
     print('Fitting RF...')
     clf.fit(X_train, y_train.flatten())
+
+    # print time taken in minutes
+    time_elapsed = time.time() - now
 
     print('Predicting...')
     X_test, y_test = prep_data_matrix(data_splits['test'], args)

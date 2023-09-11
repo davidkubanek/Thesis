@@ -32,6 +32,23 @@ def run_sweep(data_splits, args):
                    'Precision val': np.mean(CV_results['precision_test']),
                    'Recall train': np.mean(CV_results['recall_train']),
                    'Recall val': np.mean(CV_results['recall_test'])})
+        if args['num_assays'] > 1:
+            wandb.log({'AUC_1 train': CV_results['auc_train_each'][0],
+                       'AUC_2 train': CV_results['auc_train_each'][1],
+                       'AUC_1 val': CV_results['auc_test_each'][0],
+                       'AUC_2 val': CV_results['auc_test_each'][1],
+                       'F1_1 train': CV_results['f1_train_each'][0],
+                       'F1_2 train': CV_results['f1_train_each'][1],
+                       'F1_1 val': CV_results['f1_test_each'][0],
+                       'F1_2 val': CV_results['f1_test_each'][1],
+                       'Precision_1 train': CV_results['precision_train_each'][0],
+                       'Precision_2 train': CV_results['precision_train_each'][1],
+                       'Precision_1 val': CV_results['precision_test_each'][0],
+                       'Precision_2 val': CV_results['precision_test_each'][1],
+                       'Recall_1 train': CV_results['recall_train_each'][0],
+                       'Recall_2 train': CV_results['recall_train_each'][1],
+                       'Recall_1 val': CV_results['recall_test_each'][0],
+                       'Recall_2 val': CV_results['recall_test_each'][1]})
 
         # save the performance of the best model configuration
         if np.mean(CV_results['auc_test']) > args['best_auc']:
@@ -39,9 +56,12 @@ def run_sweep(data_splits, args):
             print('New best AUC:', args['best_auc'], '\n')
 
             # save the best model
-            folder = args['directory'] + 'trained_models/'
+            folder = args['directory'] + 'trained_models/70epochs/'
 
             filename = 'ass' + args['assay_list'][0] + '_' + args['model']
+            if len(args['assay_list']) > 1:
+                filename = 'ass' + args['assay_list'][0] + '+' + \
+                    args['assay_list'][1] + '_' + args['model']
 
             # Check if directory exists, if not, create it
             if not os.path.exists(folder):

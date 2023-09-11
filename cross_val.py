@@ -44,6 +44,16 @@ def cross_val(data_splits, args):
             exp.eval_metrics['precision_test'][-1])
         CV_results['recall_train'].append(exp.eval_metrics['recall_train'][-1])
         CV_results['recall_test'].append(exp.eval_metrics['recall_test'][-1])
+        if args['num_assays'] > 1:
+            CV_results['auc_train_each'] = exp.eval_metrics['auc_train_each'][-1]
+            CV_results['auc_test_each'] = exp.eval_metrics['auc_test_each'][-1]
+            CV_results['f1_train_each'] = exp.eval_metrics['f1_train_each'][-1]
+            CV_results['f1_test_each'] = exp.eval_metrics['f1_test_each'][-1]
+            CV_results['precision_train_each'] = exp.eval_metrics['precision_train_each'][-1]
+            CV_results['precision_test_each'] = exp.eval_metrics['precision_test_each'][-1]
+            CV_results['recall_train_each'] = exp.eval_metrics['recall_train_each'][-1]
+            CV_results['recall_test_each'] = exp.eval_metrics['recall_test_each'][-1]
+
         # save fold metrics into file
         folder = args['directory'] + 'CV_results/'
         # Check if directory exists, if not, create it
