@@ -6,7 +6,6 @@ from train import *
 from models import *
 
 import torch
-import wandb
 
 
 # %%
@@ -36,8 +35,9 @@ args['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 args['directory'] = directory
 
 # data parameters
-args['num_data_points'] = 324191  # all=324191 # number of data points to use
-args['num_assays'] = 5  # number of assays to use (i.e., no. of output classes)
+args['num_data_points'] = 324191  # all=324191, number of data points to use
+
+
 args['assay_start'] = 0  # which assay to start from
 args['assay_order'] = assay_order
 # number of node features in graph representation
@@ -69,7 +69,7 @@ args['best_auc'] = 0
 dataloader = prepare_dataloader(data_splits, args)
 
 args['assay_list'] = ['2797', '2796']
-args['num_assays'] = len(args['assay_list'])
+args['num_assays'] = len(args['assay_list']) # number of assays to use (i.e., no. of output classes)
 args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 
 # print('TESTING')
@@ -120,8 +120,6 @@ args['assays_idx'] = find_assay_indeces(args['assay_list'], assay_order)
 Run
 '''
 # %%
-# wandb.login(key='69f641df6e6f0934ab302070cf0b3bcd5399ddd3')
-# API KEY: 69f641df6e6f0934ab302070cf0b3bcd5399ddd3
 
 # , '2796', '1979', '602248', '1910', '602274', '720582', '1259313', '624204', '652039']:
 for assay in ['2797']:
@@ -140,27 +138,8 @@ for assay in ['2797']:
     args['lr'] = 0.01
 
 # Create a custom run name dynamically
+run_name = 'ass' + args['assay_list'][0] + '_' + args['model']
 
-# run_name = 'ass' + args['assay_list'][0] + '_' + args['model']
-# if len(args['assay_list']) > 1:
-#     run_name = 'ass' + args['assay_list'][0] + '+' + \
-#         args['assay_list'][1] + '_' + args['model']
-# run = wandb.init(
-#     name=run_name,
-#     # Set the project where this run will be logged
-#     project="GDL_molecular_activity_prediction_BASE",
-#     # Track hyperparameters and run metadata
-#     config={
-#         'num_data_points': args['num_data_points'],
-#         'assays': args['assay_list'],
-#         'num_assays': args['num_assays'],
-
-#         'model': args['model'],
-#         'dropout': args['dropout'],
-#         'batch_size': args['batch_size'],
-#         'num_epochs': args['num_epochs'],
-#         'lr': args['lr'],
-#     })
 
 # create dataset from data_list
 dataloader = prepare_dataloader(data_splits, args)

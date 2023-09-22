@@ -8,9 +8,9 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
 
 '''
-GCN and GCN_FP
-- GCN: graph embedding followed by a final classification layer
-- GCN_FP: graph + fingerprints embedding followed by a final classification layer
+GCN_base and GCN_base_FP
+- GCN_base: graph embedding followed by a final classification layer
+- GCN_base_FP: graph + fingerprints embedding followed by a final classification layer
 '''
 
 
@@ -29,7 +29,7 @@ class GCN(nn.Module):
         num_classes = args['num_assays']
         self.dropout = args['dropout']
 
-        if args['model'] == 'GCN_FP':
+        if args['model'] == 'GCN_base_FP':
             fp_dim = args['fp_dim']
         else:  # aka only GCN
             fp_dim = 0
@@ -208,10 +208,10 @@ class GCN_MLP(nn.Module):
         self.num_layers = args['num_layers']
         self.dropout = args['dropout']
 
-        if args['model'] == 'GCN_MLP_FP':
+        if args['model'] == 'GCN_FP':
             self.fp_dim = args['fp_dim']
             self.grover_fp_dim = 0
-        elif args['model'] == 'GCN_MLP_FP_GROVER':
+        elif args['model'] == 'GCN_FP_GROVER':
             self.fp_dim = args['fp_dim']
             self.grover_fp_dim = args['grover_fp_dim']
         else:  # aka only GCN_MLP

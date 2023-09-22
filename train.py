@@ -25,13 +25,13 @@ class TrainManager:
 
         if not model:
             # initialize model depending on model type
-            if args['model'] in ['GCN', 'GCN_FP']:
+            if args['model'] in ['GCN_base', 'GCN_base_FP']:
                 self.model = GCN(args)
             elif args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                 self.model = MLP(args)
             elif args['model'] in ['LR']:
                 self.model = LogisticRegression(args['fp_dim'])
-            elif args['model'] in ['GCN_MLP', 'GCN_MLP_FP', 'GCN_MLP_FP_GROVER']:
+            elif args['model'] in ['GCN', 'GCN_FP', 'GCN_FP_GROVER']:
                 self.model = GCN_MLP(args)
         else:
             self.model = model
@@ -99,12 +99,12 @@ class TrainManager:
                     param.grad = None
 
                 # forward pass based on model type
-                if self.args['model'] in ['GCN', 'GCN_MLP']:
+                if self.args['model'] in ['GCN_base', 'GCN']:
                     out = self.model(data.x, data.edge_index, data.batch)
-                elif self.args['model'] in ['GCN_FP', 'GCN_MLP_FP']:
+                elif self.args['model'] in ['GCN_base_FP', 'GCN_FP']:
                     out = self.model(data.x, data.edge_index,
                                      data.batch, fp=data.fp)
-                elif self.args['model'] == 'GCN_MLP_FP_GROVER':
+                elif self.args['model'] == 'GCN_FP_GROVER':
                     out = self.model(data.x, data.edge_index, data.batch,
                                      fp=data.fp, grover=data.grover_fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
@@ -129,7 +129,7 @@ class TrainManager:
 
             epoch_time = time.time() - start_time
 
-            if log and (((epoch+1) % (epochs/2) == 0) or (epoch == 0)) or ((epoch+1) > (epochs-3)):
+            if ((epoch+1) % (epochs/2) == 0) or (epoch == 0) or ((epoch+1) > (epochs-3)):
                 # evaluate
                 acc_train, auc_train, precision_train, recall_train, f1_train = self.eval(
                     self.dataloader['train'])
@@ -170,25 +170,13 @@ class TrainManager:
                 self.eval_metrics['f1_train'].append(f1_train)
                 self.eval_metrics['f1_test'].append(f1_test)
 
-                if wb_log is True:
-                    wandb.log({'epoch': self.curr_epoch, "AUC train": auc_train, "AUC test": auc_test, "F1 train": f1_train, "F1 test": f1_test,
-                              "Precision train": precision_train, "Precision test": precision_test, "Recall train": recall_train, "Recall test": recall_test})
-                    if self.args['num_assays'] > 1:
-                        wandb.log({'epoch': self.curr_epoch, "AUC_1 train": self.eval_metrics['auc_train_each'][-1][0], "AUC_2 train": self.eval_metrics['auc_train_each'][-1][1], "AUC_1 test": self.eval_metrics['auc_test_each'][-1][0], "AUC_2 test": self.eval_metrics['auc_test_each'][-1][1], 'F1_1 train': self.eval_metrics['f1_train_each'][-1][0], 'F1_2 train': self.eval_metrics['f1_train_each'][-1][1], 'F1_1 test': self.eval_metrics['f1_test_each'][-1][0], 'F1_2 test': self.eval_metrics['f1_test_each'][-1][1],
-                                   "Precision_1 train": self.eval_metrics['precision_train_each'][-1][0], "Precision_2 train": self.eval_metrics['precision_train_each'][-1][1], "Precision_1 test": self.eval_metrics['precision_test_each'][-1][0], "Precision_2 test": self.eval_metrics['precision_test_each'][-1][1], "Recall_1 train": self.eval_metrics['recall_train_each'][-1][0], "Recall_2 train": self.eval_metrics['recall_train_each'][-1][1], "Recall_1 test": self.eval_metrics['recall_test_each'][-1][0], "Recall_2 test": self.eval_metrics['recall_test_each'][-1][1]})
-
-                if ((epoch+1) % (epochs/2) == 0) or (epoch == 0) or ((epoch+1) > (epochs-3)):
-                    if self.args['num_assays'] == 1:
-                        print(
-                            f'Epoch: {self.curr_epoch+1}, Loss: {loss.item():.4f}, Train AUC: {auc_train:.4f}, Test AUC: {auc_test:.4f}')
-                        print(
-                            f'                        Train F1: {f1_train:.4f}, Test F1: {f1_test:.4f}')
-                    else:
-                        print(
-                            f'Epoch: {self.curr_epoch+1}, Loss: {loss.item():.4f}, Train AUC1:'+str(round(self.eval_metrics['auc_train_each'][-1][0], 4))+f', Train AUC2:'+str(round(self.eval_metrics['auc_train_each'][-1][1], 4))+f', Train AUCmacro: {auc_train:.4f}, Test AUC1: '+str(round(self.eval_metrics['auc_test_each'][-1][0], 4))+f', Test AUC2: '+str(round(self.eval_metrics['auc_test_each'][-1][1], 4))+f', Test AUCmacro: {auc_test:.4f}')
-                        print(
-                            f'                        Train F1_1: '+str(round(self.eval_metrics['f1_train_each'][-1][0], 4))+f', Train F1_2: '+str(round(self.eval_metrics['f1_train_each'][-1][1], 4))+f', Train F1macro: {f1_train:.4f}, Test F1_1: '+str(round(self.eval_metrics['f1_test_each'][-1][0], 4))+f', Test F1_2: '+str(round(self.eval_metrics['f1_test_each'][-1][1], 4))+f', Test F1macro: {f1_test:.4f}')
-
+                
+                if log:
+                    print(
+                        f'Epoch: {self.curr_epoch+1}, Loss: {loss.item():.4f}, Train AUC: {auc_train:.4f}, Test AUC: {auc_test:.4f}')
+                    print(
+                        f'                        Train F1: {f1_train:.4f}, Test F1: {f1_test:.4f}')
+                    
             if early_stop and (epoch+1) in [23, 24, 25]:
                 # evaluate
                 acc_test, auc_test, precision_test, recall_test, f1_test = self.eval(
@@ -197,8 +185,7 @@ class TrainManager:
                 if self.args['num_assays'] > 1:  # multi-assay
                     # save results for individual assay
                     self.eval_metrics['auc_test_each'].append(auc_test)
-                    self.eval_metrics['precision_test_each'].append(
-                        precision_test)
+                    self.eval_metrics['precision_test_each'].append(precision_test)
                     self.eval_metrics['recall_test_each'].append(recall_test)
                     self.eval_metrics['f1_test_each'].append(f1_test)
                     # get macro average of metrics
@@ -214,23 +201,20 @@ class TrainManager:
 
                 best_latest_acu = np.max(self.eval_metrics['auc_test'][-3:])
 
-                if (epoch+1) == 25:
-                    print('Epochs: 23,24,25, AUC test: ',
-                          self.eval_metrics['auc_test'][-3:])
-                    print('         Current best AUC: ', self.args["best_auc"])
+                # if (epoch+1) == 25:
+                #     print('Epochs: 23,24,25, AUC test: ',
+                #           self.eval_metrics['auc_test'][-3:])
+                #     print('         Current best AUC: ', self.args["best_auc"])
                 if (epoch+1) == 25 and (best_latest_acu < 0.51) and (auc_test < self.args["best_auc"]):
                     print(
-                        f'Early stopping at AUC test: {auc_test}, with best AUC test: {self.args["best_auc"]}')
+                        f'Early stopping at AUC test: {auc_test}, since best AUC test found: {self.args["best_auc"]}')
                     self.curr_epoch += 1
                     # end training
                     break
 
             self.curr_epoch += 1
-            # self.scheduler.step(self.eval_metrics['loss'][-1])
             self.scheduler.step()
-        if wb_log is True:
-            wandb.log({'epoch': self.curr_epoch, "avg epoch time": epoch_time})
-
+        
     def eval(self, loader):
         '''
         Evaluate the model on a given dataset (train/val/test).
@@ -250,12 +234,12 @@ class TrainManager:
             for data in loader:
 
                 # forward pass based on model type
-                if self.args['model'] in ['GCN', 'GCN_MLP']:
+                if self.args['model'] in ['GCN_base', 'GCN']:
                     out = self.model(data.x, data.edge_index, data.batch)
-                elif self.args['model'] in ['GCN_FP', 'GCN_MLP_FP']:
+                elif self.args['model'] in ['GCN_base_FP', 'GCN_FP']:
                     out = self.model(data.x, data.edge_index,
                                      data.batch, fp=data.fp)
-                elif self.args['model'] == 'GCN_MLP_FP_GROVER':
+                elif self.args['model'] == 'GCN_FP_GROVER':
                     out = self.model(data.x, data.edge_index, data.batch,
                                      fp=data.fp, grover=data.grover_fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
@@ -322,7 +306,7 @@ class TrainManager:
         ax2.set_title('Area Under Curve')
         ax2.legend()
         # make main title for the whole plot
-        if self.args['model'] in ['GCN', 'GCN_FP']:
+        if self.args['model'] in ['GCN_base', 'GCN_base_FP']:
             plt.suptitle(f'Model: {self.args["model"]} | Node feats: {self.args["num_node_features"]}, Hidden dim: {self.args["hidden_channels"]}, Dropout: {self.args["dropout"]}, Num data points: {self.args["num_data_points"]}, Num assays: {self.args["num_assays"]}, Num epochs: {self.curr_epoch}')
         elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
             plt.suptitle(f'Model: {self.args["model"]} | Num layers: {self.args["num_layers"]}, Hidden dim: {self.args["hidden_channels"]}, Dropout: {self.args["dropout"]}, Num data points: {self.args["num_data_points"]}, Num assays: {self.args["num_assays"]}, Num epochs: {self.curr_epoch}')
@@ -333,7 +317,12 @@ class TrainManager:
 
         if save_logs:
 
+
             filename = 'ass' + self.args['assay_list'][0] + '_results.csv'
+            if len(self.args['assay_list']) > 1:
+                filename = 'ass' + \
+                    '+'.join([assay for assay in self.args['assay_list']]) + \
+                    '_results.csv'
 
             # if file exists
             if os.path.exists(os.path.join(
@@ -352,17 +341,20 @@ class TrainManager:
                 'dropout': [self.args['dropout']],
                 'hidden_dims': [self.args['hidden_channels']],
                 'fold': [self.args['fold']],
+                # take the mean of the last 3 epochs
                 'epochs': [self.curr_epoch],
-                'loss': self.eval_metrics['loss'][-1],
-                'auc_train': self.eval_metrics['auc_train'][-1],
-                'auc_test': self.eval_metrics['auc_test'][-1],
-                'f1_train': self.eval_metrics['f1_train'][-1],
-                'f1_test': self.eval_metrics['f1_test'][-1],
-                'precision_train': self.eval_metrics['precision_train'][-1],
-                'precision_test': self.eval_metrics['precision_test'][-1],
-                'recall_train': self.eval_metrics['recall_train'][-1],
-                'recall_test': self.eval_metrics['recall_test'][-1],
+                'loss': np.mean(self.eval_metrics['loss'][-3]),
+                'auc_train': np.mean(self.eval_metrics['auc_train'][-3]),
+                'auc_test': np.mean(self.eval_metrics['auc_test'][-3]),
+                'f1_train': np.mean(self.eval_metrics['f1_train'][-3]),
+                'f1_test': np.mean(self.eval_metrics['f1_test'][-3]),
+                'precision_train': np.mean(self.eval_metrics['precision_train'][-3]),
+                'precision_test': np.mean(self.eval_metrics['precision_test'][-3]),
+                'recall_train': np.mean(self.eval_metrics['recall_train'][-3]),
+                'recall_test': np.mean(self.eval_metrics['recall_test'][-3]),
             })
+
+
 
             results_df = pd.concat(
                 [results_df, new_results_df], ignore_index=True)

@@ -8,3 +8,5 @@ test.ipynb
 data/
 __pycache__/
 *.json
+
+/Data_all/

@@ -185,17 +185,62 @@ def load_datalist(directory, load_path):
     with open(directory + 'info/cell_based_low_hr.txt', 'r') as file:
         lines = file.read().splitlines()
     assay_groups['cell_based_low_hr'] = list(map(str, lines))
+    with open(directory + 'info/cell_based_assays.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['cell_based'] = list(map(str, lines))
     with open(directory + 'info/non_cell_based_high_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['non_cell_based_high_hr'] = list(map(str, lines))
+    assay_groups['biochemical_high_hr'] = list(map(str, lines))
     with open(directory + 'info/non_cell_based_med_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['non_cell_based_med_hr'] = list(map(str, lines))
+    assay_groups['biochemical_med_hr'] = list(map(str, lines))
     with open(directory + 'info/non_cell_based_low_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['non_cell_based_low_hr'] = list(map(str, lines))
+    assay_groups['biochemical_low_hr'] = list(map(str, lines))
+    with open(directory + 'info/non_cell_based_assays.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['biochemical'] = list(map(str, lines))
+
     # load assay order
     with open(directory + 'info/assay_order.txt', 'r') as f:
         assay_order = [line.strip() for line in f.readlines()]
 
     return data_list, assay_groups, assay_order
+
+
+def load_assay_groups(directory):
+    '''
+    Load the assay groups and assay order.
+    directory: root directory of data
+    load_path: path to pickle file
+    '''
+
+    # load the assay groups
+    assay_groups = {}
+    with open(directory + 'info/cell_based_high_hr.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['cell_based_high_hr'] = list(map(str, lines))
+    with open(directory + 'info/cell_based_med_hr.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['cell_based_med_hr'] = list(map(str, lines))
+    with open(directory + 'info/cell_based_low_hr.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['cell_based_low_hr'] = list(map(str, lines))
+    with open(directory + 'info/cell_based_assays.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['cell_based'] = list(map(str, lines))
+    with open(directory + 'info/non_cell_based_high_hr.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['biochemical_high_hr'] = list(map(str, lines))
+    with open(directory + 'info/non_cell_based_med_hr.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['biochemical_med_hr'] = list(map(str, lines))
+    with open(directory + 'info/non_cell_based_low_hr.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['biochemical_low_hr'] = list(map(str, lines))
+    with open(directory + 'info/non_cell_based_assays.txt', 'r') as file:
+        lines = file.read().splitlines()
+    assay_groups['biochemical'] = list(map(str, lines))
+
+
+    return assay_groups
