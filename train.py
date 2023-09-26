@@ -29,8 +29,8 @@ class TrainManager:
                 self.model = GCN(args)
             elif args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                 self.model = MLP(args)
-            elif args['model'] in ['LR']:
-                self.model = LogisticRegression(args['fp_dim'])
+            elif args['model'] in ['LogReg']:
+                self.model = LogisticRegression(args['fp_dim'], args['num_assays'])
             elif args['model'] in ['GCN', 'GCN_FP', 'GCN_FP_GROVER']:
                 self.model = GCN_MLP(args)
         else:
@@ -109,7 +109,7 @@ class TrainManager:
                                      fp=data.fp, grover=data.grover_fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                     out = self.model(data)
-                elif self.args['model'] in ['LR']:
+                elif self.args['model'] in ['LogReg']:
                     out = self.model(data.fp)
 
                 # data.y = data.y.unsqueeze(1)
@@ -244,7 +244,7 @@ class TrainManager:
                                      fp=data.fp, grover=data.grover_fp)
                 elif self.args['model'] in ['FP', 'GROVER', 'GROVER_FP']:
                     out = self.model(data)
-                elif self.args['model'] in ['LR']:
+                elif self.args['model'] in ['LogReg']:
                     out = self.model(data.fp)
 
                 # convert out to binary

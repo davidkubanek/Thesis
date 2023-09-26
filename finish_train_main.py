@@ -44,14 +44,13 @@ args['assay_list'] = [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['6022
 '''
 Provide a list of models to run training for (for the assays chosen above).
 '''
+args['assays_list'] = [['2797'], ['2796', '1259313']]
 
-args['models_list'] = ['FP', 'GROVER_FP', 'GCN_MLP_FP', 'GCN_MLP_FP_GROVER']
+args['models_list'] = ['LogReg', 'RF', 'GCN_base', 'FP', 'GROVER_FP', 'GCN', 'GCN_FP', 'GCN_FP_GROVER']
 
 
 
-args['assay_list'] = [['2797'], ['2796', '1259313']]
 
-args['models_list'] = ['FP', 'GROVER_FP']
 
 
 # run function

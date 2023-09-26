@@ -25,7 +25,7 @@ args['lr_decay_factor'] = 0.5
 
 # hyperparameter search parameters
 args['num_folds'] = 2 # number of folds for cross-validation
-args['samples'] = 4 # number of hyperparameter combinations to try
+args['samples'] = 2 # number of hyperparameter combinations to try
 # which hyperparameters to search over by random sampling
 hyperparams_dict = {
             'batch_size': {
@@ -57,12 +57,10 @@ args['assay_list'] = [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['6022
 Provide a list of models to run training for (for the assays chosen above).
 '''
 
-args['models_list'] = ['FP', 'GROVER_FP', 'GCN_FP', 'GCN_FP_GROVER']
+args['models_list'] = ['GCN_base', 'FP', 'GROVER_FP', 'GCN', 'GCN_FP', 'GCN_FP_GROVER']
 
+args['assays_list'] = [['2797'], ['2796', '1259313']]
 
-args['assay_list'] = [['2797'], ['2796', '1259313']]
-
-args['models_list'] = ['FP', 'GROVER_FP']
 
 
 # run sweep

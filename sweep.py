@@ -35,7 +35,7 @@ def sweep(hyperparams_dict, args):
     Sweeps
     '''
 
-    for assay in args['assay_list']:
+    for assay in args['assays_list']:
         for model in args['models_list']:
             # config
             args['assay_list'] = assay
@@ -44,6 +44,8 @@ def sweep(hyperparams_dict, args):
                 args['assay_list'], assay_order)
             args['model'] = model
             args['best_auc'] = 0
+
+            assert model in ['GCN_base', 'FP', 'GROVER_FP', 'GCN', 'GCN_FP', 'GCN_FP_GROVER'], 'Sweep not implemented for this model.'
 
             print('\n\n====================================================')
             print('Running hyperparameter sweep for:')

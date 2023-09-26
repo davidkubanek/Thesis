@@ -177,10 +177,10 @@ class MLP(nn.Module):
 
 
 class LogisticRegression(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, output_dim):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
-        self.linear = nn.Linear(input_dim, 1)
+        self.linear = nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
         # reshape fp to batch_size x fp_dim
