@@ -24,8 +24,8 @@ args['lr'] = 0.01
 args['lr_decay_factor'] = 0.5
 
 args['num_epochs'] = 10 # how many more epochs to train for
-args['pre_trained_epochs'] = 10 # if using a pre-trained model, set this to the number of epochs it was trained for, if set to zero it will train model from scratch
-args['use_best_hyperparams'] = True # training will use best hyperparams from best run. Can be used with pre-trained model or without but hyperparameter optimization must have been run before
+args['pre_trained_epochs'] = 0 # if using a pre-trained model, set this to the number of epochs it was trained for, if set to zero it will train model from scratch
+args['use_best_hyperparams'] = False # training will use best hyperparams from best run. Can be used with pre-trained model or without but hyperparameter optimization must have been run before
 
 '''
 Provide a list of assays to run training for.
