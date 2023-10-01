@@ -12,7 +12,8 @@ Provide a list of assays to run training for in args['assays_list'].
 Example: [['2797'], ['2796','1979']] will train a uni-assay model for assay 2797 and a multi-assay model for assays 2796 and 1979
 
 The uni-assay models I ran were: [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['602274'], ['720582'], ['1259313'], ['624204'], ['652039']]
-The multi-assay models I ran were: [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['602274'], ['720582'], ['1259313'], ['624204'], ['652039']]
+The multi-assay models I ran were: [['2796','2797'], ['2796','1979'], ['1910', '1979'], ['720582', '652039'], ['720582', '602274'], ['1259313', '602274'], ['2796', '2797', '602248'], ['2796', '2797', '602248', '1910'], ['2796', '2797', '602248', '1910', '1979'], ['720582', '624204', '652039'], ['720582', '624204', '652039', '1259313'], ['720582', '624204', '652039', '1259313', '602274']]
+
 
 Can also use 'assay_groups' dictionary to access lists of assays in different hit rates categories: 'cell_based_high_hr', 'cell_based_med_hr', 'cell_based_low_hr', 'cell_based', 'biochemical_high_hr', 'biochemical_med_hr', 'biochemical_low_hr', 'biochemical'
 

@@ -17,7 +17,8 @@ Provide a list of assays to run training for in args['assays_list'].
 Example: [['2797'], ['2796','1979']] will train a uni-assay model for assay 2797 and a multi-assay model for assays 2796 and 1979
 
 The uni-assay models I ran were: [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['602274'], ['720582'], ['1259313'], ['624204'], ['652039']]
-The multi-assay models I ran were: [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['602274'], ['720582'], ['1259313'], ['624204'], ['652039']]
+The multi-assay models I ran were: [['2796','2797'], ['2796','1979'], ['1910', '1979'], ['720582', '652039'], ['720582', '602274'], ['1259313', '602274'], ['2796', '2797', '602248'], ['2796', '2797', '602248', '1910'], ['2796', '2797', '602248', '1910', '1979'], ['720582', '624204', '652039'], ['720582', '624204', '652039', '1259313'], ['720582', '624204', '652039', '1259313', '602274']]
+
 
 Can also use 'assay_groups' dictionary to access lists of assays in different hit rates categories: 'cell_based_high_hr', 'cell_based_med_hr', 'cell_based_low_hr', 'cell_based', 'biochemical_high_hr', 'biochemical_med_hr', 'biochemical_low_hr', 'biochemical'
 
@@ -30,15 +31,15 @@ Hyperparameter sweeps are only possible for models: GCN_base, FP, GROVER_FP, GCN
 args['num_data_points'] = 320016  # all=320016 , number of data points to use
 
 # training parameters
-args['num_epochs'] = 10 # how many epochs to train for in sweep
+args['num_epochs'] = 70 # how many epochs to train for in sweep
 args['num_layers'] = 3  # number of layers in MLP
 args['hidden_channels_conv'] = 64 # channels in convolutional block in GCN_base
 args['lr'] = 0.01
 args['lr_decay_factor'] = 0.5
 
 # hyperparameter search parameters
-args['num_folds'] = 2 # number of folds for cross-validation
-args['samples'] = 2 # number of hyperparameter combinations to try
+args['num_folds'] = 3 # number of folds for cross-validation
+args['samples'] = 6 # number of hyperparameter combinations to try
 # which hyperparameters to search over by random sampling
 hyperparams_dict = {
             'batch_size': {
@@ -57,11 +58,12 @@ args['verbose'] = False
 
 # dictionary of assay groups for different hit rates and assay types
 assay_groups = load_assay_groups(args['directory'])
-print(assay_groups['cell_based_high_hr'])
 
 
-args['assays_list'] = [['1910'], ['2796', '1979']]
+# provide a list of assays to run training for
+args['assays_list'] = [['2797'], ['2796'], ['1979'], ['602248'], ['1910'], ['602274'], ['720582'], ['1259313'], ['624204'], ['652039']]
 
+# provide a list of models to run training for (for the assays chosen above)
 args['models_list'] = ['GCN_base', 'FP', 'GROVER_FP', 'GCN', 'GCN_FP', 'GCN_FP_GROVER']
 
 
@@ -89,11 +91,11 @@ args['dropout'] = 0.2
 args['batch_size'] = 256
 
 
-args['num_epochs'] = 15 # how many more epochs to train for
+args['num_epochs'] = 50 # how many more epochs to train for
 
-args['pre_trained_epochs'] = 10 # if using a pre-trained model, set this to the number of epochs it was trained for, if set to zero it will train model from scratch
+args['pre_trained_epochs'] = 70 # if using a pre-trained model, set this to the number of epochs it was trained for, if set to zero it will train model from scratch
 args['use_best_hyperparams'] = True # training will use best hyperparams from best run. Can be used with pre-trained model or without but hyperparameter optimization must have been run before
-args['use_best_no_epochs'] = False # if want to use best number of epochs found for a given model, set this to True
+args['use_best_no_epochs'] = True # if want to use best number of epochs found for a given model, set this to True
 
 '''
 Provide a list of models to run training for (for the same assays as in the sweeps above).
@@ -121,4 +123,4 @@ print('Pre-trained epochs:', args['pre_trained_epochs'], '| Use best hyperparams
 print('==================================================================================\n')
 finish_train(args)
 
-print('\n\nAll training finished.')
+print('\n\nAll training finished.\n')

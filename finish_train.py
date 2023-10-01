@@ -13,7 +13,7 @@ def finish_train(args):
     '''
 
     # Specify the path where you saved the dictionary
-    load_path = args['directory'] + 'final/datalist_small.pkl'  # no_out.pkl'
+    load_path = args['directory'] + 'final/datalist_no_out.pkl'  # no_out.pkl'
 
     print('\nLoading data...')
     data_list, assay_groups, assay_order = load_datalist(args['directory'], load_path)

@@ -10,7 +10,7 @@ def sweep(hyperparams_dict, args):
     '''
 
     # Specify the path where you saved the dictionary
-    load_path = args['directory'] + 'final/datalist_small.pkl'  # no_out.pkl'
+    load_path = args['directory'] + 'final/datalist_no_out.pkl'  # no_out.pkl'
 
     print('\nLoading data...')
     data_list, assay_groups, assay_order = load_datalist(args['directory'], load_path)
@@ -45,7 +45,10 @@ def sweep(hyperparams_dict, args):
             args['model'] = model
             args['best_auc'] = 0
 
-            assert model in ['GCN_base', 'FP', 'GROVER_FP', 'GCN', 'GCN_FP', 'GCN_FP_GROVER'], 'Sweep not implemented for this model.'
+            if model not in ['GCN_base', 'FP', 'GROVER_FP', 'GCN', 'GCN_FP', 'GCN_FP_GROVER']:
+                print('Sweep not implemented for this model.')
+                print('Exiting...')
+                return
 
             print('\n\n====================================================')
             print('Running hyperparameter sweep for:')

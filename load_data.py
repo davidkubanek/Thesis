@@ -219,28 +219,28 @@ def load_assay_groups(directory):
     assay_groups = {}
     with open(directory + 'info/cell_based_high_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['cell_based_high_hr'] = list(map(str, lines))
+    assay_groups['cell_based_high_hr'] = [[line] for line in lines]
     with open(directory + 'info/cell_based_med_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['cell_based_med_hr'] = list(map(str, lines))
+    assay_groups['cell_based_med_hr'] = [[line] for line in lines]
     with open(directory + 'info/cell_based_low_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['cell_based_low_hr'] = list(map(str, lines))
+    assay_groups['cell_based_low_hr'] = [[line] for line in lines]
     with open(directory + 'info/cell_based_assays.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['cell_based'] = list(map(str, lines))
+    assay_groups['cell_based'] = [[line] for line in lines]
     with open(directory + 'info/non_cell_based_high_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['biochemical_high_hr'] = list(map(str, lines))
+    assay_groups['biochemical_high_hr'] = [[line] for line in lines]
     with open(directory + 'info/non_cell_based_med_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['biochemical_med_hr'] = list(map(str, lines))
+    assay_groups['biochemical_med_hr'] = [[line] for line in lines]
     with open(directory + 'info/non_cell_based_low_hr.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['biochemical_low_hr'] = list(map(str, lines))
+    assay_groups['biochemical_low_hr'] = [[line] for line in lines]
     with open(directory + 'info/non_cell_based_assays.txt', 'r') as file:
         lines = file.read().splitlines()
-    assay_groups['biochemical'] = list(map(str, lines))
+    assay_groups['biochemical'] = [[line] for line in lines]
 
 
     return assay_groups
