@@ -19,7 +19,7 @@ Data files required to run the scripts above are not published on GitHub at this
 ### Generic
 
 main.py
-- this is the most high-level file that can be used to run the full pipeline with the same presets as used in the thesis: just specifiy which assays and press run
+- this is the most high-level file that can be used to run the full pipeline with the same presets as used in the thesis: just specifiy which assays (in args['assays_list']) and press run
 - performs both hyperparameter search to find the best model. It then also fetches the best model found and pre-trained and finishes training for an additional custom number of epochs
 
 ### More custom
