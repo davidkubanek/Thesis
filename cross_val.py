@@ -20,14 +20,15 @@ def cross_val(data_splits, args):
                               [i].to(args['device']) for i in val_index]
 
         args['fold'] = fold
-        print('\nFold:', fold+1)
+        if args['verbose'] is True:
+            print('\nFold:', fold+1)
 
         # create dataset from data_splits
         dataloader = prepare_dataloader(data_splits, args)
 
         # train model
         exp = TrainManager(dataloader, args)
-        exp.train(epochs=args['num_epochs'], log=True,
+        exp.train(epochs=args['num_epochs'], log=args['verbose'],
                   wb_log=False, early_stop=True)
 
         # save metrics for fold

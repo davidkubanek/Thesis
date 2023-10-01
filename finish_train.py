@@ -48,6 +48,18 @@ def finish_train(args):
                 args['assay_list'], assay_order)
             args['model'] = model
 
+
+            if args['use_best_no_epochs'] is True:
+                if args['model'] in ['LogReg', 'GCN_FP']:
+                    args['num_epochs'] = 100
+
+                if args['model'] in ['GCN_base', 'FP', 'GROVER_FP']:
+                    args['num_epochs'] = 120
+
+                if args['model'] in ['GCN', 'GROVER', 'GCN_FP_GROVER']:
+                    args['num_epochs'] = 190
+            
+
             if model == 'RF':
                 run_RF(data_splits, assay_groups, args)
             
@@ -106,7 +118,7 @@ def finish_train(args):
                     print('No pre-trained model loaded. Training from scratch...\n')
 
                 # finish training
-                exp.train(epochs=args['num_epochs'], log=True,
+                exp.train(epochs=args['num_epochs'], log=args['verbose'],
                         wb_log=False, early_stop=True)
                 # save model
                 folder = args['directory'] + \
@@ -134,7 +146,8 @@ def finish_train(args):
                     recall_test_macro = recall_test
                     f1_test_macro = f1_test
 
-                print('saving results...\n\n')
+                if args['verbose'] is True:
+                    print('saving results...\n\n')
                 # save results
                 filename = 'all_best_results.csv'
                 folder = args['directory'] + 'results/'

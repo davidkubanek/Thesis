@@ -37,11 +37,13 @@ class TrainManager:
             self.model = model
 
         self.model.to(args['device'])
-        print("Model is on device:", next(self.model.parameters()).device)
-        total_params = sum(p.numel()
-                           for p in self.model.parameters() if p.requires_grad)
-        print(f'Total number of parameters: {total_params}')
-        print('Model:', args['model'], '| Assays:', args['assay_list'])
+
+        if args['verbose'] is True:
+            print("Model is on device:", next(self.model.parameters()).device)
+            total_params = sum(p.numel()
+                            for p in self.model.parameters() if p.requires_grad)
+            print(f'Total number of parameters: {total_params}')
+            print('Model:', args['model'], '| Assays:', args['assay_list'])
 
         self.dataloader = dataloader
 
@@ -206,8 +208,9 @@ class TrainManager:
                 #           self.eval_metrics['auc_test'][-3:])
                 #     print('         Current best AUC: ', self.args["best_auc"])
                 if (epoch+1) == 25 and (best_latest_acu < 0.51) and (auc_test < self.args["best_auc"]):
-                    print(
-                        f'Early stopping at AUC test: {auc_test}, since best AUC test found: {self.args["best_auc"]}')
+                    if log:
+                        print(
+                            f'Early stopping at AUC test: {auc_test}, since best AUC test found: {self.args["best_auc"]}')
                     self.curr_epoch += 1
                     # end training
                     break
@@ -313,7 +316,6 @@ class TrainManager:
         plt.show()
 
     def save_results(self, folder, save_logs=True):
-        print('saving experiment...')
 
         if save_logs:
 

@@ -52,13 +52,6 @@ def sweep(hyperparams_dict, args):
             print('Assays:', args['assay_list'], '| Model:', args['model'])
             print('====================================================\n')
 
-            # name of sweep
-            name = 'ass' + args['assay_list'][0] + '_' + args['model']
-            if len(args['assay_list']) > 1:
-                name = 'ass' + \
-                    '+'.join([assay for assay in args['assay_list']]) + \
-                    '_' + args['model']
-
 
 
             for s in range(args['samples']):
@@ -67,9 +60,10 @@ def sweep(hyperparams_dict, args):
                 args['dropout'] = random_combinations_dicts[s]['dropout']
                 args['hidden_channels'] = random_combinations_dicts[s]['hidden_channels']
 
-                print('--------------------')
-                print('Sample no:', s+1)
-                print(' hyperparams (batch_size, dropout, hidden_channels):', args['batch_size'], ', ', args['dropout'], ', ', args['hidden_channels'])
-                print('\nCurrent best AUC:', args['best_auc'])
+                if args['verbose'] is True:
+                    print('--------------------')
+                    print('Sample no:', s+1)
+                    print(' hyperparams (batch_size, dropout, hidden_channels):', args['batch_size'], ', ', args['dropout'], ', ', args['hidden_channels'])
+                    print('\nCurrent best AUC:', args['best_auc'])
                 args['best_auc'] = run_sweep(data_splits, args)
 

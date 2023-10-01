@@ -38,11 +38,14 @@ def eval_RF(y_test, y_pred):
 
 def run_RF(data_splits, assay_groups, args):
 
-    assert args['num_assays']==1, 'RF for multiple assays is not implemented'
-
     print('\n\n====================================================')
     print('Assays:', args['assay_list'], '| Model:', args['model'])
     print('====================================================\n')
+
+    if args['num_assays']>1:
+        print('RF for multiple assays is not implemented')
+        print('Exiting...')
+        return
 
     X_train, y_train = prep_data_matrix(data_splits['train'], args)
 
