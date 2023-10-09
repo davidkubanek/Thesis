@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from torch.optim import Adam, lr_scheduler
-import wandb
 from tqdm import tqdm
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 import time
@@ -125,9 +124,7 @@ class TrainManager:
 
             self.eval_metrics['loss'].append(
                 cum_loss/len(self.dataloader['train']))
-            if wb_log is True:
-                wandb.log({'epoch': self.curr_epoch,
-                          "loss": cum_loss/len(self.dataloader['train'])})
+
 
             epoch_time = time.time() - start_time
 
@@ -285,8 +282,6 @@ class TrainManager:
 
         self.eval_time = time.time() - start_time
 
-        if self.wb_log is True:
-            wandb.log({'epoch': self.curr_epoch, "eval time": self.eval_time})
 
         return acc, auc, precision, recall, f1
 
